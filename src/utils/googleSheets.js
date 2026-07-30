@@ -10,6 +10,38 @@ function parseGvizValue(v) {
   return v
 }
 
+// Tolerant header lookup (accents/casing/whitespace), mirrors utils/metrics.js' field()
+function normKey(s) {
+  return String(s ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function pick(row, name) {
+  if (name in row) return row[name]
+  const target = normKey(name)
+  for (const key of Object.keys(row)) {
+    if (normKey(key) === target) return row[key]
+  }
+  return null
+}
+
+const hasValue = (v) => v !== null && v !== undefined && String(v).trim() !== ''
+
+// Google Sheets pads the exported range with trailing rows. A generic "any column is
+// non-empty" check isn't reliable because a stray formula/autofill in some unrelated
+// column can leave a truthy value on every padded row too. Instead, require the field(s)
+// that only exist on a genuine record (a real sale, a real ad-metrics day, a real
+// submission) to be filled.
+const REQUIRED_FIELDS = {
+  '01 - Data Ventas Form': ['Fecha de venta', 'Monto de Venta'],
+  '02 - Métricas Anuncios': ['Day', 'Ad Name'],
+  '03 - Tally leads': ['Submitted at'],
+}
+
 export async function fetchSheet(sheetId, sheetName) {
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`
   const res = await fetch(url)
@@ -35,12 +67,15 @@ export async function fetchSheet(sheetId, sheetName) {
   }
 
   const headers = json.table.cols.map((c) => c.label.trim())
+  const requiredFields = REQUIRED_FIELDS[sheetName]
   const rows = (json.table.rows || [])
     .filter((row) => row && row.c)
     .map((row) => Object.fromEntries(headers.map((h, i) => [h, parseGvizValue(row.c[i]?.v ?? null)])))
-    // Google Sheets pads the exported range with trailing empty-but-formatted rows;
-    // drop rows that have no real value in any column so counts (ventas, leads) stay accurate.
-    .filter((row) => Object.values(row).some((v) => v !== null && v !== undefined && String(v).trim() !== ''))
+    .filter((row) =>
+      requiredFields
+        ? requiredFields.every((f) => hasValue(pick(row, f)))
+        : Object.values(row).some(hasValue),
+    )
 
   return rows
 }
