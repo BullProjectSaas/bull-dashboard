@@ -34,10 +34,13 @@ export async function fetchSheet(sheetId, sheetName) {
     throw new Error(`Error en la hoja "${sheetName}": ${msg || 'no encontrada'}`)
   }
 
-  const headers = json.table.cols.map((c) => c.label)
+  const headers = json.table.cols.map((c) => c.label.trim())
   const rows = (json.table.rows || [])
     .filter((row) => row && row.c)
     .map((row) => Object.fromEntries(headers.map((h, i) => [h, parseGvizValue(row.c[i]?.v ?? null)])))
+    // Google Sheets pads the exported range with trailing empty-but-formatted rows;
+    // drop rows that have no real value in any column so counts (ventas, leads) stay accurate.
+    .filter((row) => Object.values(row).some((v) => v !== null && v !== undefined && String(v).trim() !== ''))
 
   return rows
 }

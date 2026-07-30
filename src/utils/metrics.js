@@ -24,17 +24,39 @@ export const num = (v) => {
   return Number.isFinite(n) ? n : 0
 }
 
-export const sum = (arr, key) => arr.reduce((acc, r) => acc + num(r[key]), 0)
+// Google Sheets headers can carry stray whitespace/casing/accents depending on how the
+// sheet was set up; resolve fields tolerantly instead of failing silently on a mismatch.
+const normKey = (s) =>
+  String(s ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+
+export function field(row, name) {
+  if (name in row) return row[name]
+  const target = normKey(name)
+  for (const key of Object.keys(row)) {
+    if (normKey(key) === target) return row[key]
+  }
+  return null
+}
+
+export const sum = (arr, key) => arr.reduce((acc, r) => acc + num(field(r, key)), 0)
 
 export const avg = (arr, key) => {
-  const vals = arr.filter((r) => r[key] !== null && r[key] !== undefined && r[key] !== '').map((r) => num(r[key]))
+  const vals = arr
+    .map((r) => field(r, key))
+    .filter((v) => v !== null && v !== undefined && v !== '')
+    .map((v) => num(v))
   if (!vals.length) return 0
   return vals.reduce((a, b) => a + b, 0) / vals.length
 }
 
 const clean = (v) => (v !== null && v !== undefined && String(v).trim() !== '' ? String(v).trim() : null)
 
-export const getAttribution = (row) => clean(row['Origen ad tally']) || clean(row['Anuncio de Origen']) || 'Sin atribución'
+export const getAttribution = (row) => clean(field(row, 'Origen ad tally')) || clean(field(row, 'Anuncio de Origen')) || 'Sin atribución'
 
 export const normalizeZona = (v) => {
   const s = clean(v)
@@ -52,10 +74,10 @@ export const toDateKey = (v) => {
   return `${y}-${m}-${day}`
 }
 
-export function filterByDateRange(rows, field, from, to) {
+export function filterByDateRange(rows, fieldName, from, to) {
   if (!from && !to) return rows
   return rows.filter((r) => {
-    const key = toDateKey(r[field])
+    const key = toDateKey(field(r, fieldName))
     if (!key) return false
     if (from && key < from) return false
     if (to && key > to) return false
@@ -73,13 +95,13 @@ function computeByAd(ventas, metricas, tally) {
     return map.get(key)
   }
 
-  for (const r of metricas) get(r['Ad Name']).gasto += num(r['Amount Spent'])
+  for (const r of metricas) get(field(r, 'Ad Name')).gasto += num(field(r, 'Amount Spent'))
   for (const r of ventas) {
     const entry = get(getAttribution(r))
-    entry.facturacion += num(r['Monto de Venta'])
+    entry.facturacion += num(field(r, 'Monto de Venta'))
     entry.ventasCount += 1
   }
-  for (const r of tally) get(r['utm_content']).leadsCount += 1
+  for (const r of tally) get(field(r, 'utm_content')).leadsCount += 1
 
   return Array.from(map.values())
     .map((e) => ({
@@ -98,7 +120,7 @@ const ZONA_FIELD = '¿De qué localidad/zona sos @Tu nombre ?'
 function computeByZona(tally) {
   const map = new Map()
   for (const r of tally) {
-    const zona = normalizeZona(r[ZONA_FIELD])
+    const zona = normalizeZona(field(r, ZONA_FIELD))
     map.set(zona, (map.get(zona) || 0) + 1)
   }
   const total = tally.length
@@ -110,11 +132,11 @@ function computeByZona(tally) {
 function computeByProducto(ventas) {
   const map = new Map()
   for (const r of ventas) {
-    const key = clean(r['Producto Vendido']) || 'Sin especificar'
+    const key = clean(field(r, 'Producto Vendido')) || 'Sin especificar'
     if (!map.has(key)) map.set(key, { producto: key, ventas: 0, facturacion: 0 })
     const entry = map.get(key)
     entry.ventas += 1
-    entry.facturacion += num(r['Monto de Venta'])
+    entry.facturacion += num(field(r, 'Monto de Venta'))
   }
   return Array.from(map.values())
     .map((e) => ({ ...e, ticket: e.ventas > 0 ? e.facturacion / e.ventas : 0 }))
@@ -124,15 +146,15 @@ function computeByProducto(ventas) {
 function computeDaily(ventas, metricas) {
   const spendByDate = new Map()
   for (const r of metricas) {
-    const key = toDateKey(r['Day'])
+    const key = toDateKey(field(r, 'Day'))
     if (!key) continue
-    spendByDate.set(key, (spendByDate.get(key) || 0) + num(r['Amount Spent']))
+    spendByDate.set(key, (spendByDate.get(key) || 0) + num(field(r, 'Amount Spent')))
   }
   const revenueByDate = new Map()
   for (const r of ventas) {
-    const key = toDateKey(r['Fecha de venta'])
+    const key = toDateKey(field(r, 'Fecha de venta'))
     if (!key) continue
-    revenueByDate.set(key, (revenueByDate.get(key) || 0) + num(r['Monto de Venta']))
+    revenueByDate.set(key, (revenueByDate.get(key) || 0) + num(field(r, 'Monto de Venta')))
   }
   const dates = Array.from(new Set([...spendByDate.keys(), ...revenueByDate.keys()])).sort()
 
