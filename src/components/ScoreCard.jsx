@@ -1,6 +1,6 @@
 import { C } from '../theme'
 
-export default function ScoreCard({ label, value, color, sub }) {
+export default function ScoreCard({ label, value, color, sub, delta }) {
   return (
     <div
       style={{
@@ -16,6 +16,11 @@ export default function ScoreCard({ label, value, color, sub }) {
     >
       <span style={{ fontSize: 12, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.6 }}>{label}</span>
       <span style={{ fontSize: 26, fontWeight: 800, color: color || C.text, lineHeight: 1.1 }}>{value}</span>
+      {delta !== undefined && delta !== null && (
+        <span style={{ fontSize: 12, fontWeight: 700, color: delta >= 0 ? C.green : C.red }}>
+          {delta >= 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}% vs. período anterior
+        </span>
+      )}
       {sub && <span style={{ fontSize: 11, color: C.muted }}>{sub}</span>}
     </div>
   )

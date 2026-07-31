@@ -1,6 +1,6 @@
 import { C } from '../theme'
 
-export default function Section({ title, children }) {
+export default function Section({ title, actions, children }) {
   return (
     <section
       style={{
@@ -10,9 +10,12 @@ export default function Section({ title, children }) {
         padding: '18px 20px',
       }}
     >
-      <h2 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: C.text, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-        {title}
-      </h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
+        <h2 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.text, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          {title}
+        </h2>
+        {actions}
+      </div>
       {children}
     </section>
   )

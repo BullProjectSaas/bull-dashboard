@@ -10,10 +10,13 @@ const tooltipStyle = {
   fontSize: 13,
 }
 
-export default function DailyEvolutionChart({ data }) {
+export default function DailyEvolutionChart({ data, cumulative }) {
   if (!data.length) {
     return <p style={{ color: C.muted, fontSize: 13 }}>Sin datos suficientes para este gráfico.</p>
   }
+
+  const inversionKey = cumulative ? 'inversionAcum' : 'inversion'
+  const facturacionKey = cumulative ? 'facturacionAcum' : 'facturacion'
 
   return (
     <ResponsiveContainer width="100%" height={320}>
@@ -28,8 +31,22 @@ export default function DailyEvolutionChart({ data }) {
           labelStyle={{ color: C.gold, fontWeight: 700 }}
         />
         <Legend wrapperStyle={{ fontSize: 12, color: C.muted }} />
-        <Line type="monotone" dataKey="inversionAcum" name="Inversión acumulada" stroke={C.muted} strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="facturacionAcum" name="Facturación acumulada" stroke={C.gold} strokeWidth={2.5} dot={false} />
+        <Line
+          type="monotone"
+          dataKey={inversionKey}
+          name={cumulative ? 'Inversión acumulada' : 'Inversión diaria'}
+          stroke={C.muted}
+          strokeWidth={2}
+          dot={false}
+        />
+        <Line
+          type="monotone"
+          dataKey={facturacionKey}
+          name={cumulative ? 'Facturación acumulada' : 'Facturación diaria'}
+          stroke={C.gold}
+          strokeWidth={2.5}
+          dot={false}
+        />
       </LineChart>
     </ResponsiveContainer>
   )

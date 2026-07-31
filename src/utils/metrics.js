@@ -115,6 +115,32 @@ export function filterByDateRange(rows, fieldName, from, to) {
   })
 }
 
+// Parse a "YYYY-MM-DD" key (as produced by toDateKey / <input type="date">) into a local
+// Date without going through `new Date(string)`, which reads ISO date-only strings as
+// UTC midnight and would shift the day when combined with local date math.
+const parseDateKey = (key) => {
+  const [y, m, d] = key.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+export const addDays = (dateKey, n) => {
+  const d = parseDateKey(dateKey)
+  d.setDate(d.getDate() + n)
+  return toDateKey(d)
+}
+
+// Equal-length period immediately preceding [from, to], for "compare to previous period".
+export function previousPeriod(from, to) {
+  if (!from || !to) return null
+  const days = Math.round((parseDateKey(to) - parseDateKey(from)) / 86400000) + 1
+  const prevTo = addDays(from, -1)
+  const prevFrom = addDays(prevTo, -(days - 1))
+  return { from: prevFrom, to: prevTo }
+}
+
+// Percentage change, or null when there's no meaningful baseline to compare against.
+export const pctChange = (curr, prev) => (prev ? ((curr - prev) / Math.abs(prev)) * 100 : null)
+
 // ---------- aggregations ----------
 
 function computeByAd(ventas, metricas, tally) {
