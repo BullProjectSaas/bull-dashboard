@@ -9,6 +9,9 @@ const th = {
   textTransform: 'uppercase',
   letterSpacing: 0.4,
   borderBottom: `1px solid ${C.border}`,
+  position: 'sticky',
+  top: 0,
+  background: C.bg2,
 }
 const td = {
   padding: '10px 14px',
@@ -20,7 +23,7 @@ const td = {
 
 export default function ProductoTable({ data }) {
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <div style={{ overflow: 'auto', maxHeight: 420 }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>

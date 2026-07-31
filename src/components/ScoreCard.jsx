@@ -4,7 +4,8 @@ export default function ScoreCard({ label, value, color, sub, delta }) {
   return (
     <div
       style={{
-        background: C.bg2,
+        position: 'relative',
+        background: 'linear-gradient(180deg, rgba(30,45,64,0.7), rgba(22,32,48,0.7))',
         border: `1px solid ${C.border}`,
         borderRadius: 14,
         padding: '18px 20px',
@@ -12,9 +13,20 @@ export default function ScoreCard({ label, value, color, sub, delta }) {
         flexDirection: 'column',
         gap: 8,
         minWidth: 0,
-        transition: 'border-color 0.15s ease',
+        boxShadow: '0 10px 22px -14px rgba(0,0,0,0.6)',
+        overflow: 'hidden',
       }}
     >
+      <span
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 2,
+          background: `linear-gradient(90deg, ${C.gold}, transparent)`,
+        }}
+      />
       <span style={{ fontSize: 11, fontWeight: 600, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.7 }}>{label}</span>
       <span style={{ fontSize: 28, fontWeight: 800, color: color || C.text, lineHeight: 1.1, letterSpacing: -0.3 }}>{value}</span>
       {delta !== undefined && delta !== null && (

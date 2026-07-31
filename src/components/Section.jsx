@@ -4,10 +4,12 @@ export default function Section({ title, actions, children }) {
   return (
     <section
       style={{
-        background: C.bg2,
+        background: 'linear-gradient(180deg, rgba(30,45,64,0.7), rgba(22,32,48,0.7))',
         border: `1px solid ${C.border}`,
         borderRadius: 16,
         padding: '20px 22px',
+        boxShadow: '0 12px 28px -12px rgba(0,0,0,0.5)',
+        backdropFilter: 'blur(2px)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>

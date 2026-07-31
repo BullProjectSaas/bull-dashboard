@@ -90,7 +90,7 @@ export default function App() {
   const s = dashboard?.scorecards
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text }}>
+    <div style={{ minHeight: '100vh', color: C.text }}>
       <Header sheetId={sheetId} updatedAt={data?.updatedAt} loading={loading} />
 
       <DateFilter

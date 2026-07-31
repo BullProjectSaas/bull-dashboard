@@ -1,14 +1,5 @@
 import { C } from '../theme'
 
-function Mark() {
-  return (
-    <svg width="26" height="24" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M13 0L26 24H16.5L13 17L9.5 24H0L13 0Z" fill={C.gold} />
-      <path d="M13 6L20 20H15.8L13 14.5L10.2 20H6L13 6Z" fill={C.bg} />
-    </svg>
-  )
-}
-
 function Pill({ children, dot }) {
   return (
     <span
@@ -31,7 +22,7 @@ function Pill({ children, dot }) {
 }
 
 export default function Header({ sheetId, updatedAt, loading }) {
-  const shortId = sheetId ? `${sheetId.slice(0, 8)}…${sheetId.slice(-4)}` : '—'
+  const shortId = sheetId ? `${sheetId.slice(0, 6)}…${sheetId.slice(-4)}` : '—'
   const updatedLabel = updatedAt
     ? updatedAt.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
     : '—'
@@ -47,27 +38,30 @@ export default function Header({ sheetId, updatedAt, loading }) {
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: 12,
-        padding: '16px 24px',
-        background: 'rgba(27,47,78,0.92)',
+        padding: '14px 24px',
+        background: 'rgba(19,30,49,0.9)',
         borderBottom: `1px solid ${C.border}`,
         backdropFilter: 'blur(8px)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <Mark />
-        <h1
-          style={{
-            margin: 0,
-            fontSize: 17,
-            fontWeight: 800,
-            letterSpacing: 1.2,
-            color: C.text,
-            textTransform: 'uppercase',
-          }}
-        >
-          Bull Partners<span style={{ fontSize: 10, verticalAlign: 'super', color: C.gold }}>™</span>
-        </h1>
-        <Pill dot={C.gold}>{shortId}</Pill>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <img src={`${import.meta.env.BASE_URL}logo-mark.png`} alt="" width={30} height={25} style={{ display: 'block' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: 16,
+              fontWeight: 800,
+              letterSpacing: 1.2,
+              color: C.text,
+              textTransform: 'uppercase',
+              lineHeight: 1,
+            }}
+          >
+            Bull Partners<span style={{ fontSize: 9, verticalAlign: 'super', color: C.gold }}>™</span>
+          </h1>
+          <span style={{ fontSize: 11, color: C.muted, opacity: 0.7 }}>Sheet {shortId}</span>
+        </div>
       </div>
 
       <Pill dot={loading ? C.amber : C.green}>{loading ? 'Actualizando…' : `Actualizado ${updatedLabel}`}</Pill>

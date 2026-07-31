@@ -10,6 +10,9 @@ const th = {
   letterSpacing: 0.4,
   borderBottom: `1px solid ${C.border}`,
   whiteSpace: 'nowrap',
+  position: 'sticky',
+  top: 0,
+  background: C.bg2,
 }
 const td = {
   padding: '10px 14px',
@@ -22,7 +25,7 @@ const td = {
 
 export default function AdTable({ data }) {
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <div style={{ overflow: 'auto', maxHeight: 480 }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
         <thead>
           <tr>
