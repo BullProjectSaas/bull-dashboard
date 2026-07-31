@@ -40,6 +40,12 @@ export function field(row, name) {
   for (const key of Object.keys(row)) {
     if (normKey(key) === target) return row[key]
   }
+  // Some sheets append extra text to a column name (e.g. "Tiempo de conversión (Días)"
+  // instead of "Tiempo de conversión") — fall back to a prefix match.
+  for (const key of Object.keys(row)) {
+    const nk = normKey(key)
+    if (nk.startsWith(target) || target.startsWith(nk)) return row[key]
+  }
   return null
 }
 
@@ -64,14 +70,38 @@ export const normalizeZona = (v) => {
   return s.toLowerCase().replace(/\b\p{L}/gu, (c) => c.toUpperCase())
 }
 
+const pad2 = (n) => String(n).padStart(2, '0')
+
+// Some client sheets store dates as plain text instead of a real Sheets date type
+// (e.g. "22/06/2026" or "2026-02-27"). Parse those directly by their components instead
+// of going through `new Date(string)`, which is ambiguous for "DD/MM/YYYY" (JS assumes
+// MM/DD) and, for a date-only ISO string, applies UTC-midnight + local getters — that
+// combination silently shifts the day for any timezone behind UTC.
 export const toDateKey = (v) => {
   if (v === null || v === undefined || v === '') return null
-  const d = v instanceof Date ? v : new Date(v)
+
+  if (v instanceof Date) {
+    if (Number.isNaN(v.getTime())) return null
+    return `${v.getFullYear()}-${pad2(v.getMonth() + 1)}-${pad2(v.getDate())}`
+  }
+
+  const s = String(v).trim()
+
+  const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (iso) {
+    const [, y, m, d] = iso
+    return `${y}-${pad2(m)}-${pad2(d)}`
+  }
+
+  const dmy = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/)
+  if (dmy) {
+    const [, d, m, y] = dmy
+    return `${y}-${pad2(m)}-${pad2(d)}`
+  }
+
+  const d = new Date(s)
   if (Number.isNaN(d.getTime())) return null
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
 
 export function filterByDateRange(rows, fieldName, from, to) {
