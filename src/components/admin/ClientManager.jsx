@@ -29,7 +29,7 @@ export default function ClientManager({ clients, ready, error, addClient, remove
   }
 
   return (
-    <Section title={`Clientes (${clients.length})`}>
+    <Section title="Gestionar clientes">
       <form onSubmit={submit} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
         <input placeholder="Nombre del cliente" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} />
         <input placeholder="Sheet ID (pegar acá)" value={sheetId} onChange={(e) => setSheetId(e.target.value)} style={{ ...inputStyle, flex: 2 }} />
