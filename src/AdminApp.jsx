@@ -14,7 +14,7 @@ const TABS = [
 export default function AdminApp() {
   const [unlocked, setUnlocked] = useState(isUnlocked())
   const [tab, setTab] = useState('resumen')
-  const { clients, ready, error, addClient, removeClient } = useClients()
+  const { clients, ready, error, addClient, updateClient, removeClient } = useClients()
 
   if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />
 
@@ -85,7 +85,7 @@ export default function AdminApp() {
 
       <main style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
         {tab === 'clientes' ? (
-          <ClientManager clients={clients} ready={ready} error={error} addClient={addClient} removeClient={removeClient} />
+          <ClientManager clients={clients} ready={ready} error={error} addClient={addClient} updateClient={updateClient} removeClient={removeClient} />
         ) : (
           <AggregateOverview clients={clients} />
         )}

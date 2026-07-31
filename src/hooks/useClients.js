@@ -28,13 +28,22 @@ export function useClients() {
     return () => unsub()
   }, [])
 
-  const addClient = useCallback(async (name, sheetId) => {
-    await setDoc(doc(db, 'clients', sheetId.trim()), { name: name.trim(), addedAt: Date.now() })
+  const addClient = useCallback(async (name, sheetId, celula, etiqueta) => {
+    await setDoc(doc(db, 'clients', sheetId.trim()), {
+      name: name.trim(),
+      celula: (celula || '').trim(),
+      etiqueta: etiqueta || '',
+      addedAt: Date.now(),
+    })
+  }, [])
+
+  const updateClient = useCallback(async (sheetId, patch) => {
+    await setDoc(doc(db, 'clients', sheetId), patch, { merge: true })
   }, [])
 
   const removeClient = useCallback(async (sheetId) => {
     await deleteDoc(doc(db, 'clients', sheetId))
   }, [])
 
-  return { clients, ready, error, addClient, removeClient }
+  return { clients, ready, error, addClient, updateClient, removeClient }
 }

@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { C } from '../../theme'
 import { fetchAllSheets } from '../../utils/googleSheets'
 import { computeDashboard, filterByDateRange, fmtARS, fmtDays, fmtInt, fmtPct, fmtROAS, roasColor } from '../../utils/metrics'
+import { computeClientAlerts } from '../../utils/alerts'
+import { tagColor } from '../../utils/clientTags'
 import CompactDateFilter from './CompactDateFilter'
+import AlertsPanel from './AlertsPanel'
 import ScoreCard from '../ScoreCard'
 import Section from '../Section'
 
@@ -13,11 +16,46 @@ function computeForRange(raw, from, to) {
   return computeDashboard(ventas, metricas, tally)
 }
 
+function aggregate(list) {
+  const inversion = list.reduce((a, c) => a + c.inversion, 0)
+  const facturacion = list.reduce((a, c) => a + c.facturacion, 0)
+  const totalLeads = list.reduce((a, c) => a + c.totalLeads, 0)
+  const totalVentas = list.reduce((a, c) => a + c.totalVentas, 0)
+  return {
+    clientesActivos: list.length,
+    inversion,
+    facturacion,
+    totalLeads,
+    totalVentas,
+    roasGlobal: inversion > 0 ? facturacion / inversion : 0,
+    roasPromedio: list.length ? list.reduce((a, c) => a + c.roas, 0) / list.length : 0,
+    tasaCierre: totalLeads > 0 ? (totalVentas / totalLeads) * 100 : 0,
+    cpl: totalLeads > 0 ? inversion / totalLeads : 0,
+    costoPorVenta: totalVentas > 0 ? inversion / totalVentas : 0,
+    ticket: totalVentas > 0 ? facturacion / totalVentas : 0,
+  }
+}
+
+const th = {
+  padding: '10px 14px',
+  fontSize: 11,
+  color: C.muted,
+  textTransform: 'uppercase',
+  letterSpacing: 0.4,
+  borderBottom: `1px solid ${C.border}`,
+  whiteSpace: 'nowrap',
+  position: 'sticky',
+  top: 0,
+  background: C.bg2,
+}
+const td = { padding: '10px 14px', fontSize: 13, borderBottom: `1px solid ${C.border}` }
+
 export default function AggregateOverview({ clients }) {
   const [rawByClient, setRawByClient] = useState({})
   const [loading, setLoading] = useState(true)
   const [failedCount, setFailedCount] = useState(0)
   const [range, setRange] = useState({ from: '', to: '' })
+  const [celulaFilter, setCelulaFilter] = useState('')
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
@@ -53,37 +91,44 @@ export default function AggregateOverview({ clients }) {
     () =>
       clients.map((c) => {
         const raw = rawByClient[c.sheetId]
-        if (!raw) return { name: c.name, sheetId: c.sheetId, ok: false }
+        if (!raw) return { name: c.name, sheetId: c.sheetId, celula: c.celula, etiqueta: c.etiqueta, ok: false }
         const dash = computeForRange(raw, range.from, range.to)
-        return { name: c.name, sheetId: c.sheetId, ok: true, ...dash.scorecards }
+        return {
+          name: c.name,
+          sheetId: c.sheetId,
+          celula: c.celula,
+          etiqueta: c.etiqueta,
+          ok: true,
+          alerts: computeClientAlerts(raw),
+          ...dash.scorecards,
+        }
       }),
     [clients, rawByClient, range],
   )
 
-  const totals = useMemo(() => {
+  const celulas = useMemo(() => Array.from(new Set(clients.map((c) => c.celula).filter(Boolean))).sort(), [clients])
+
+  const visible = useMemo(
+    () => (celulaFilter ? perClient.filter((c) => c.celula === celulaFilter) : perClient),
+    [perClient, celulaFilter],
+  )
+
+  const totals = useMemo(() => aggregate(visible.filter((c) => c.ok)), [visible])
+
+  const byCelula = useMemo(() => {
     const ok = perClient.filter((c) => c.ok)
-    const inversion = ok.reduce((a, c) => a + c.inversion, 0)
-    const facturacion = ok.reduce((a, c) => a + c.facturacion, 0)
-    const totalLeads = ok.reduce((a, c) => a + c.totalLeads, 0)
-    const totalVentas = ok.reduce((a, c) => a + c.totalVentas, 0)
-    const roasGlobal = inversion > 0 ? facturacion / inversion : 0
-    const roasPromedio = ok.length ? ok.reduce((a, c) => a + c.roas, 0) / ok.length : 0
-    return {
-      clientesActivos: ok.length,
-      inversion,
-      facturacion,
-      totalLeads,
-      totalVentas,
-      roasGlobal,
-      roasPromedio,
-      tasaCierre: totalLeads > 0 ? (totalVentas / totalLeads) * 100 : 0,
-      cpl: totalLeads > 0 ? inversion / totalLeads : 0,
-      costoPorVenta: totalVentas > 0 ? inversion / totalVentas : 0,
-      ticket: totalVentas > 0 ? facturacion / totalVentas : 0,
+    const groups = new Map()
+    for (const c of ok) {
+      const key = c.celula || 'Sin célula'
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key).push(c)
     }
+    return Array.from(groups.entries())
+      .map(([celula, list]) => ({ celula, ...aggregate(list) }))
+      .sort((a, b) => b.facturacion - a.facturacion)
   }, [perClient])
 
-  const rows = useMemo(() => [...perClient].sort((a, b) => (b.facturacion || 0) - (a.facturacion || 0)), [perClient])
+  const rows = useMemo(() => [...visible].sort((a, b) => (b.facturacion || 0) - (a.facturacion || 0)), [visible])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -104,6 +149,20 @@ export default function AggregateOverview({ clients }) {
         >
           {loading ? 'Actualizando…' : 'Actualizar datos de todos los clientes'}
         </button>
+        {celulas.length > 0 && (
+          <select
+            value={celulaFilter}
+            onChange={(e) => setCelulaFilter(e.target.value)}
+            style={{ background: C.bg3, color: C.text, border: `1px solid ${C.border}`, borderRadius: 10, padding: '8px 12px', fontSize: 13 }}
+          >
+            <option value="">Todas las células</option>
+            {celulas.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        )}
         {failedCount > 0 && (
           <span style={{ fontSize: 12, color: C.red }}>{failedCount} cliente(s) no se pudieron cargar.</span>
         )}
@@ -113,6 +172,8 @@ export default function AggregateOverview({ clients }) {
         <p style={{ color: C.muted, fontSize: 13 }}>Cargando datos de {clients.length} cliente(s)…</p>
       ) : (
         <>
+          <AlertsPanel clients={perClient} />
+
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
             <ScoreCard label="Clientes activos" value={fmtInt(totals.clientesActivos)} />
             <ScoreCard label="Inversión total" value={fmtARS(totals.inversion)} />
@@ -127,28 +188,46 @@ export default function AggregateOverview({ clients }) {
             <ScoreCard label="Ticket Promedio" value={fmtARS(totals.ticket)} />
           </div>
 
+          {byCelula.length > 1 && (
+            <Section title="Resultados por célula">
+              <div style={{ overflow: 'auto', maxHeight: 360 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ ...th, textAlign: 'left' }}>Célula</th>
+                      <th style={{ ...th, textAlign: 'right' }}>Clientes</th>
+                      <th style={{ ...th, textAlign: 'right' }}>Inversión</th>
+                      <th style={{ ...th, textAlign: 'right' }}>Facturación</th>
+                      <th style={{ ...th, textAlign: 'right' }}>ROAS</th>
+                      <th style={{ ...th, textAlign: 'right' }}>Leads</th>
+                      <th style={{ ...th, textAlign: 'right' }}>Ventas</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {byCelula.map((g) => (
+                      <tr key={g.celula}>
+                        <td style={{ ...td, textAlign: 'left', fontWeight: 600 }}>{g.celula}</td>
+                        <td style={{ ...td, textAlign: 'right' }}>{fmtInt(g.clientesActivos)}</td>
+                        <td style={{ ...td, textAlign: 'right' }}>{fmtARS(g.inversion)}</td>
+                        <td style={{ ...td, textAlign: 'right' }}>{fmtARS(g.facturacion)}</td>
+                        <td style={{ ...td, textAlign: 'right', fontWeight: 700, color: roasColor(g.roasGlobal) }}>{fmtROAS(g.roasGlobal)}</td>
+                        <td style={{ ...td, textAlign: 'right' }}>{fmtInt(g.totalLeads)}</td>
+                        <td style={{ ...td, textAlign: 'right' }}>{fmtInt(g.totalVentas)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Section>
+          )}
+
           <Section title="Detalle por cliente">
             <div style={{ overflow: 'auto', maxHeight: 480 }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 640 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
                 <thead>
                   <tr>
-                    {['Cliente', 'Inversión', 'Facturación', 'ROAS', 'Leads', 'Ventas', 'Tasa Cierre', 'Tiempo Conv.'].map((h, i) => (
-                      <th
-                        key={h}
-                        style={{
-                          textAlign: i === 0 ? 'left' : 'right',
-                          padding: '10px 14px',
-                          fontSize: 11,
-                          color: C.muted,
-                          textTransform: 'uppercase',
-                          letterSpacing: 0.4,
-                          borderBottom: `1px solid ${C.border}`,
-                          whiteSpace: 'nowrap',
-                          position: 'sticky',
-                          top: 0,
-                          background: C.bg2,
-                        }}
-                      >
+                    {['Cliente', 'Célula', 'Etiqueta', 'Inversión', 'Facturación', 'ROAS', 'Leads', 'Ventas', 'Tasa Cierre', 'Tiempo Conv.'].map((h, i) => (
+                      <th key={h} style={{ ...th, textAlign: i < 3 ? 'left' : 'right' }}>
                         {h}
                       </th>
                     ))}
@@ -157,30 +236,31 @@ export default function AggregateOverview({ clients }) {
                 <tbody>
                   {rows.map((c) => (
                     <tr key={c.sheetId}>
-                      <td style={{ padding: '10px 14px', fontSize: 13, fontWeight: 600, borderBottom: `1px solid ${C.border}` }}>
-                        <a
-                          href={`${import.meta.env.BASE_URL}?sheet=${c.sheetId}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{ color: C.text, textDecoration: 'none' }}
-                        >
+                      <td style={{ ...td, textAlign: 'left', fontWeight: 600 }}>
+                        <a href={`${import.meta.env.BASE_URL}?sheet=${c.sheetId}`} target="_blank" rel="noreferrer" style={{ color: C.text, textDecoration: 'none' }}>
                           {c.name}
                         </a>
                       </td>
+                      <td style={{ ...td, textAlign: 'left', color: C.muted }}>{c.celula || '—'}</td>
+                      <td style={{ ...td, textAlign: 'left' }}>
+                        {c.etiqueta ? (
+                          <span style={{ fontSize: 11, fontWeight: 700, color: tagColor(c.etiqueta) }}>{c.etiqueta}</span>
+                        ) : (
+                          <span style={{ color: C.muted }}>—</span>
+                        )}
+                      </td>
                       {c.ok ? (
                         <>
-                          <td style={{ padding: '10px 14px', fontSize: 13, textAlign: 'right', borderBottom: `1px solid ${C.border}` }}>{fmtARS(c.inversion)}</td>
-                          <td style={{ padding: '10px 14px', fontSize: 13, textAlign: 'right', borderBottom: `1px solid ${C.border}` }}>{fmtARS(c.facturacion)}</td>
-                          <td style={{ padding: '10px 14px', fontSize: 13, textAlign: 'right', fontWeight: 700, color: roasColor(c.roas), borderBottom: `1px solid ${C.border}` }}>
-                            {fmtROAS(c.roas)}
-                          </td>
-                          <td style={{ padding: '10px 14px', fontSize: 13, textAlign: 'right', borderBottom: `1px solid ${C.border}` }}>{fmtInt(c.totalLeads)}</td>
-                          <td style={{ padding: '10px 14px', fontSize: 13, textAlign: 'right', borderBottom: `1px solid ${C.border}` }}>{fmtInt(c.totalVentas)}</td>
-                          <td style={{ padding: '10px 14px', fontSize: 13, textAlign: 'right', borderBottom: `1px solid ${C.border}` }}>{fmtPct(c.tasaCierre)}</td>
-                          <td style={{ padding: '10px 14px', fontSize: 13, textAlign: 'right', borderBottom: `1px solid ${C.border}` }}>{fmtDays(c.tiempoConvProm)}</td>
+                          <td style={{ ...td, textAlign: 'right' }}>{fmtARS(c.inversion)}</td>
+                          <td style={{ ...td, textAlign: 'right' }}>{fmtARS(c.facturacion)}</td>
+                          <td style={{ ...td, textAlign: 'right', fontWeight: 700, color: roasColor(c.roas) }}>{fmtROAS(c.roas)}</td>
+                          <td style={{ ...td, textAlign: 'right' }}>{fmtInt(c.totalLeads)}</td>
+                          <td style={{ ...td, textAlign: 'right' }}>{fmtInt(c.totalVentas)}</td>
+                          <td style={{ ...td, textAlign: 'right' }}>{fmtPct(c.tasaCierre)}</td>
+                          <td style={{ ...td, textAlign: 'right' }}>{fmtDays(c.tiempoConvProm)}</td>
                         </>
                       ) : (
-                        <td colSpan={7} style={{ padding: '10px 14px', fontSize: 12, color: C.red, borderBottom: `1px solid ${C.border}` }}>
+                        <td colSpan={7} style={{ ...td, color: C.red }}>
                           No se pudo cargar este cliente.
                         </td>
                       )}
@@ -188,7 +268,7 @@ export default function AggregateOverview({ clients }) {
                   ))}
                   {!rows.length && (
                     <tr>
-                      <td colSpan={8} style={{ padding: '10px 14px', fontSize: 13, color: C.muted, textAlign: 'center' }}>
+                      <td colSpan={10} style={{ ...td, color: C.muted, textAlign: 'center' }}>
                         Agregá clientes arriba para ver el resumen.
                       </td>
                     </tr>
