@@ -3,7 +3,7 @@ import { C } from '../../theme'
 import { fetchAllSheets } from '../../utils/googleSheets'
 import { computeDashboard, filterByDateRange, fmtARS, fmtDays, fmtInt, fmtPct, fmtROAS, roasColor } from '../../utils/metrics'
 import { computeClientAlerts } from '../../utils/alerts'
-import { tagColor } from '../../utils/clientTags'
+import { tagColor, CLIENT_TAG_PAUSADO } from '../../utils/clientTags'
 import CompactDateFilter from './CompactDateFilter'
 import AlertsPanel from './AlertsPanel'
 import ScoreCard from '../ScoreCard'
@@ -96,13 +96,17 @@ export default function AggregateOverview({ clients }) {
         const raw = rawByClient[c.sheetId]
         if (!raw) return { name: c.name, sheetId: c.sheetId, celula: c.celula, etiqueta: c.etiqueta, ok: false }
         const dash = computeForRange(raw, range.from, range.to)
+        const alerts = computeClientAlerts(raw, c.roasBreakeven)
+        // Un cliente ya marcado como PAUSADO a mano no necesita que la alerta se lo
+        // repita — esa alerta es para pausas inesperadas, no para las que ya sabés.
+        if (c.etiqueta === CLIENT_TAG_PAUSADO) alerts.pausada = false
         return {
           name: c.name,
           sheetId: c.sheetId,
           celula: c.celula,
           etiqueta: c.etiqueta,
           ok: true,
-          alerts: computeClientAlerts(raw, c.roasBreakeven),
+          alerts,
           ...dash.scorecards,
         }
       }),
