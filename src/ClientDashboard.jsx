@@ -133,13 +133,7 @@ export default function ClientDashboard() {
       )}
 
       <main style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-            gap: 14,
-          }}
-        >
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
           <ScoreCard label="Inversión" value={fmtARS(s.inversion)} delta={deltas?.inversion} />
           <ScoreCard label="Facturación" value={fmtARS(s.facturacion)} color={C.gold} delta={deltas?.facturacion} />
           <ScoreCard label="ROAS" value={fmtROAS(s.roas)} color={roasColor(s.roas)} delta={deltas?.roas} />

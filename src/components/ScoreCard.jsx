@@ -5,6 +5,7 @@ export default function ScoreCard({ label, value, color, sub, delta }) {
     <div
       style={{
         position: 'relative',
+        flex: '1 1 180px',
         background: 'linear-gradient(180deg, rgba(30,45,64,0.7), rgba(22,32,48,0.7))',
         border: `1px solid ${C.border}`,
         borderRadius: 14,

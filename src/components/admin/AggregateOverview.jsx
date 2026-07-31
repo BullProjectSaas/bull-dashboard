@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { C } from '../../theme'
 import { fetchAllSheets } from '../../utils/googleSheets'
 import { computeDashboard, filterByDateRange, fmtARS, fmtDays, fmtInt, fmtPct, fmtROAS, roasColor } from '../../utils/metrics'
-import DateFilter from '../DateFilter'
+import CompactDateFilter from './CompactDateFilter'
 import ScoreCard from '../ScoreCard'
 import Section from '../Section'
 
@@ -17,8 +17,6 @@ export default function AggregateOverview({ clients }) {
   const [rawByClient, setRawByClient] = useState({})
   const [loading, setLoading] = useState(true)
   const [failedCount, setFailedCount] = useState(0)
-  const [fromInput, setFromInput] = useState('')
-  const [toInput, setToInput] = useState('')
   const [range, setRange] = useState({ from: '', to: '' })
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -89,27 +87,8 @@ export default function AggregateOverview({ clients }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <DateFilter
-        from={fromInput}
-        to={toInput}
-        onFromChange={setFromInput}
-        onToChange={setToInput}
-        onApply={() => setRange({ from: fromInput, to: toInput })}
-        onReset={() => {
-          setFromInput('')
-          setToInput('')
-          setRange({ from: '', to: '' })
-        }}
-        onPreset={(from, to) => {
-          setFromInput(from)
-          setToInput(to)
-          setRange({ from, to })
-        }}
-        active={Boolean(range.from && range.to)}
-        showCompare={false}
-      />
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <CompactDateFilter range={range} onChange={setRange} />
         <button
           onClick={() => setRefreshKey((k) => k + 1)}
           disabled={loading}
@@ -134,7 +113,7 @@ export default function AggregateOverview({ clients }) {
         <p style={{ color: C.muted, fontSize: 13 }}>Cargando datos de {clients.length} cliente(s)…</p>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
             <ScoreCard label="Clientes activos" value={fmtInt(totals.clientesActivos)} />
             <ScoreCard label="Inversión total" value={fmtARS(totals.inversion)} />
             <ScoreCard label="Facturación total" value={fmtARS(totals.facturacion)} color={C.gold} />
