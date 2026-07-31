@@ -39,6 +39,7 @@ export default function DateFilter({
   active,
   compareEnabled,
   onToggleCompare,
+  showCompare = true,
 }) {
   return (
     <div
@@ -89,24 +90,26 @@ export default function DateFilter({
         >
           Resetear
         </button>
-        <button
-          onClick={onToggleCompare}
-          disabled={!active}
-          title={active ? undefined : 'Aplicá un rango de fechas para comparar'}
-          style={{
-            background: compareEnabled ? C.gold : 'transparent',
-            color: compareEnabled ? C.bg : active ? C.text : C.muted,
-            border: `1px solid ${compareEnabled ? C.gold : C.border}`,
-            borderRadius: 10,
-            padding: '9px 18px',
-            fontWeight: compareEnabled ? 700 : 400,
-            fontSize: 13,
-            cursor: active ? 'pointer' : 'not-allowed',
-            opacity: active ? 1 : 0.5,
-          }}
-        >
-          Comparar vs. período anterior
-        </button>
+        {showCompare && (
+          <button
+            onClick={onToggleCompare}
+            disabled={!active}
+            title={active ? undefined : 'Aplicá un rango de fechas para comparar'}
+            style={{
+              background: compareEnabled ? C.gold : 'transparent',
+              color: compareEnabled ? C.bg : active ? C.text : C.muted,
+              border: `1px solid ${compareEnabled ? C.gold : C.border}`,
+              borderRadius: 10,
+              padding: '9px 18px',
+              fontWeight: compareEnabled ? 700 : 400,
+              fontSize: 13,
+              cursor: active ? 'pointer' : 'not-allowed',
+              opacity: active ? 1 : 0.5,
+            }}
+          >
+            Comparar vs. período anterior
+          </button>
+        )}
         {active && (
           <span
             style={{
