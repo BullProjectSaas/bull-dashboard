@@ -21,6 +21,9 @@ function aggregate(list) {
   const facturacion = list.reduce((a, c) => a + c.facturacion, 0)
   const totalLeads = list.reduce((a, c) => a + c.totalLeads, 0)
   const totalVentas = list.reduce((a, c) => a + c.totalVentas, 0)
+  // CPL es un promedio entre clientes (no gasto total / leads totales): un cliente con
+  // muchos leads no debe "diluir" el CPL de los demás.
+  const conLeads = list.filter((c) => c.totalLeads > 0)
   return {
     clientesActivos: list.length,
     inversion,
@@ -30,7 +33,7 @@ function aggregate(list) {
     roasGlobal: inversion > 0 ? facturacion / inversion : 0,
     roasPromedio: list.length ? list.reduce((a, c) => a + c.roas, 0) / list.length : 0,
     tasaCierre: totalLeads > 0 ? (totalVentas / totalLeads) * 100 : 0,
-    cpl: totalLeads > 0 ? inversion / totalLeads : 0,
+    cpl: conLeads.length ? conLeads.reduce((a, c) => a + c.cpl, 0) / conLeads.length : 0,
     costoPorVenta: totalVentas > 0 ? inversion / totalVentas : 0,
     ticket: totalVentas > 0 ? facturacion / totalVentas : 0,
   }
@@ -183,7 +186,7 @@ export default function AggregateOverview({ clients }) {
             <ScoreCard label="Total Leads" value={fmtInt(totals.totalLeads)} />
             <ScoreCard label="Total Ventas" value={fmtInt(totals.totalVentas)} />
             <ScoreCard label="Tasa de Cierre" value={fmtPct(totals.tasaCierre)} />
-            <ScoreCard label="CPL" value={fmtARS(totals.cpl)} />
+            <ScoreCard label="CPL" value={fmtARS(totals.cpl)} sub="Promedio simple entre clientes" />
             <ScoreCard label="Costo por Venta" value={fmtARS(totals.costoPorVenta)} />
             <ScoreCard label="Ticket Promedio" value={fmtARS(totals.ticket)} />
           </div>

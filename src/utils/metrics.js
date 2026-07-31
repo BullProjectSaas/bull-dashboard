@@ -62,7 +62,51 @@ export const avg = (arr, key) => {
 
 export const clean = (v) => (v !== null && v !== undefined && String(v).trim() !== '' ? String(v).trim() : null)
 
-export const getAttribution = (row) => clean(field(row, 'Origen ad tally')) || clean(field(row, 'Anuncio de Origen')) || 'Sin atribución'
+// Last 5 digits of a phone number, tolerant of country code / formatting differences
+// (+54 9 11..., 011..., with or without spaces/dashes).
+const phoneSuffix = (v) => {
+  const digits = String(v ?? '').replace(/\D/g, '')
+  return digits.length >= 5 ? digits.slice(-5) : null
+}
+
+// Attribution computed by the dashboard itself instead of trusting whatever formula lives
+// in the client's own Sheet: match the sale's phone number (last 5 digits) against Tally
+// leads, and use the matched lead's utm_content. When several leads share those digits,
+// prefer the most recent one BEFORE the sale date (last-touch attribution) — falling back
+// to the closest lead overall if none happened before the sale.
+function matchTallyByPhone(ventaRow, tally) {
+  const suffix = phoneSuffix(field(ventaRow, 'Celular Cliente'))
+  if (!suffix) return null
+
+  const saleKey = toDateKey(field(ventaRow, 'Fecha de venta'))
+  const candidates = tally
+    .map((r) => ({
+      row: r,
+      phone: phoneSuffix(field(r, 'Tu número de celular')),
+      key: toDateKey(field(r, 'Fecha')) || toDateKey(field(r, 'Submitted at')),
+    }))
+    .filter((c) => c.phone === suffix)
+
+  if (!candidates.length) return null
+
+  const withDate = candidates.filter((c) => c.key)
+  if (!withDate.length) return candidates[0].row
+
+  const before = withDate.filter((c) => !saleKey || c.key <= saleKey).sort((a, b) => (a.key < b.key ? 1 : -1))
+  if (before.length) return before[0].row
+
+  const sorted = [...withDate].sort((a, b) => (a.key < b.key ? -1 : 1))
+  return sorted[0].row
+}
+
+export function getAttribution(row, tally) {
+  if (tally) {
+    const match = matchTallyByPhone(row, tally)
+    const viaPhone = match ? clean(field(match, 'utm_content')) : null
+    if (viaPhone) return viaPhone
+  }
+  return clean(field(row, 'Origen ad tally')) || clean(field(row, 'Anuncio de Origen')) || 'Sin atribución'
+}
 
 export const normalizeZona = (v) => {
   const s = clean(v)
@@ -153,7 +197,7 @@ function computeByAd(ventas, metricas, tally) {
 
   for (const r of metricas) get(field(r, 'Ad Name')).gasto += num(field(r, 'Amount Spent'))
   for (const r of ventas) {
-    const entry = get(getAttribution(r))
+    const entry = get(getAttribution(r, tally))
     entry.facturacion += num(field(r, 'Monto de Venta'))
     entry.ventasCount += 1
   }
