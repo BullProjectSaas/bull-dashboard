@@ -60,7 +60,7 @@ export const avg = (arr, key) => {
   return vals.reduce((a, b) => a + b, 0) / vals.length
 }
 
-const clean = (v) => (v !== null && v !== undefined && String(v).trim() !== '' ? String(v).trim() : null)
+export const clean = (v) => (v !== null && v !== undefined && String(v).trim() !== '' ? String(v).trim() : null)
 
 export const getAttribution = (row) => clean(field(row, 'Origen ad tally')) || clean(field(row, 'Anuncio de Origen')) || 'Sin atribución'
 

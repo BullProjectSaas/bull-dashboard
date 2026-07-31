@@ -25,6 +25,7 @@ import ZonaTable from './components/ZonaTable'
 import ProductoTable from './components/ProductoTable'
 import Spinner from './components/Spinner'
 import ErrorState from './components/ErrorState'
+import CampaignBoard from './components/board/CampaignBoard'
 
 function computeForRange(data, from, to) {
   const ventas = filterByDateRange(data.ventas, 'Fecha de venta', from, to)
@@ -48,6 +49,13 @@ export default function App() {
     if (!data) return null
     return computeForRange(data, range.from, range.to)
   }, [data, range])
+
+  // Full-history (unfiltered) aggregate, for the campaign board — its auto-coloring is a
+  // structural/status view of each ad, independent from the scorecards' date filter.
+  const fullDashboard = useMemo(() => {
+    if (!data) return null
+    return computeDashboard(data.ventas, data.metricas, data.tally)
+  }, [data])
 
   const previousDashboard = useMemo(() => {
     if (!data || !compareEnabled || !rangeActive) return null
@@ -199,6 +207,10 @@ export default function App() {
             <ProductoTable data={dashboard.byProducto} />
           </Section>
         </div>
+
+        <Section title="Estructura de campañas">
+          <CampaignBoard sheetId={sheetId} byAd={fullDashboard.byAd} tally={data.tally} />
+        </Section>
       </main>
     </div>
   )
