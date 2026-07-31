@@ -6,12 +6,17 @@ import { DEFAULT_ROAS_BREAKEVEN } from '../utils/alerts'
 // Client registry, shared across the whole team: collection `clients`, one doc per Sheet
 // ID (using the Sheet ID itself as the doc id — adding the same sheet twice just upserts
 // the name instead of creating a duplicate entry).
-export function useClients() {
+//
+// `enabled=false` (used for the "colaborador" role) skips the read subscription entirely —
+// not just hiding the list in the UI, but never fetching it into that session at all. The
+// write helpers (addClient etc.) still work regardless, since they don't need the list.
+export function useClients(enabled = true) {
   const [clients, setClients] = useState([])
-  const [ready, setReady] = useState(false)
+  const [ready, setReady] = useState(!enabled)
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (!enabled) return undefined
     const unsub = onSnapshot(
       collection(db, 'clients'),
       (snap) => {
@@ -27,7 +32,7 @@ export function useClients() {
       },
     )
     return () => unsub()
-  }, [])
+  }, [enabled])
 
   const addClient = useCallback(async (name, sheetId, celula, etiqueta, roasBreakeven) => {
     await setDoc(doc(db, 'clients', sheetId.trim()), {

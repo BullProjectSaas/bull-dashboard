@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { C } from '../../theme'
-import { checkPassword, unlock } from '../../utils/auth'
+import { checkPassword, setRole } from '../../utils/auth'
 
 export default function PasswordGate({ onUnlock }) {
   const [value, setValue] = useState('')
@@ -10,11 +10,11 @@ export default function PasswordGate({ onUnlock }) {
   const submit = async (e) => {
     e.preventDefault()
     setChecking(true)
-    const ok = await checkPassword(value)
+    const role = await checkPassword(value)
     setChecking(false)
-    if (ok) {
-      unlock()
-      onUnlock()
+    if (role) {
+      setRole(role)
+      onUnlock(role)
     } else {
       setError(true)
     }

@@ -1,25 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { C } from '../../theme'
 import { CLIENT_TAGS, tagColor } from '../../utils/clientTags'
 import { DEFAULT_ROAS_BREAKEVEN } from '../../utils/alerts'
+import { inputStyle, selectStyle } from './formStyles'
+import AddClientForm from './AddClientForm'
 import Section from '../Section'
-
-const inputStyle = {
-  background: C.bg3,
-  color: C.text,
-  border: `1px solid ${C.border}`,
-  borderRadius: 10,
-  padding: '9px 12px',
-  fontSize: 13,
-  flex: 1,
-  minWidth: 140,
-}
-
-const selectStyle = {
-  ...inputStyle,
-  flex: 'unset',
-  minWidth: 170,
-}
 
 function TagBadge({ value }) {
   if (!value) return <span style={{ fontSize: 11, color: C.muted }}>Sin etiqueta</span>
@@ -136,78 +121,11 @@ function ClientRow({ client, updateClient, removeClient }) {
 }
 
 export default function ClientManager({ clients, ready, error, addClient, updateClient, removeClient }) {
-  const [name, setName] = useState('')
-  const [sheetId, setSheetId] = useState('')
-  const [celula, setCelula] = useState('')
-  const [etiqueta, setEtiqueta] = useState('')
-  const [roasBreakeven, setRoasBreakeven] = useState('')
-  const [saving, setSaving] = useState(false)
-
-  const celulas = useMemo(
-    () => Array.from(new Set(clients.map((c) => c.celula).filter(Boolean))).sort(),
-    [clients],
-  )
-
-  const submit = async (e) => {
-    e.preventDefault()
-    if (!name.trim() || !sheetId.trim()) return
-    setSaving(true)
-    await addClient(name, sheetId, celula, etiqueta, roasBreakeven).catch(() => {})
-    setSaving(false)
-    setName('')
-    setSheetId('')
-    setCelula('')
-    setEtiqueta('')
-    setRoasBreakeven('')
-  }
-
   return (
     <Section title="Gestionar clientes">
-      <datalist id="celulas-list">
-        {celulas.map((c) => (
-          <option key={c} value={c} />
-        ))}
-      </datalist>
-
-      <form onSubmit={submit} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
-        <input placeholder="Nombre del cliente" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} />
-        <input placeholder="Sheet ID (pegar acá)" value={sheetId} onChange={(e) => setSheetId(e.target.value)} style={{ ...inputStyle, flex: 2 }} />
-        <input list="celulas-list" placeholder="Célula" value={celula} onChange={(e) => setCelula(e.target.value)} style={inputStyle} />
-        <select value={etiqueta} onChange={(e) => setEtiqueta(e.target.value)} style={selectStyle}>
-          <option value="">Sin etiqueta</option>
-          {CLIENT_TAGS.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.value}
-            </option>
-          ))}
-        </select>
-        <input
-          type="number"
-          step="0.1"
-          min="0"
-          placeholder={`ROAS breakeven (${DEFAULT_ROAS_BREAKEVEN})`}
-          value={roasBreakeven}
-          onChange={(e) => setRoasBreakeven(e.target.value)}
-          style={{ ...inputStyle, flex: 'unset', width: 170 }}
-        />
-        <button
-          type="submit"
-          disabled={saving}
-          style={{
-            background: C.gold,
-            color: C.bg,
-            border: 'none',
-            borderRadius: 10,
-            padding: '9px 18px',
-            fontWeight: 700,
-            fontSize: 13,
-            cursor: saving ? 'default' : 'pointer',
-            opacity: saving ? 0.7 : 1,
-          }}
-        >
-          {saving ? 'Guardando…' : 'Agregar'}
-        </button>
-      </form>
+      <div style={{ marginBottom: 18 }}>
+        <AddClientForm clients={clients} addClient={addClient} />
+      </div>
 
       {error && <p style={{ fontSize: 12, color: C.red, marginTop: 0 }}>No se pudo sincronizar con Firebase ({error}).</p>}
       {!ready && <p style={{ fontSize: 13, color: C.muted }}>Cargando clientes…</p>}
