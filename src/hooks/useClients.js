@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { collection, deleteDoc, doc, onSnapshot, setDoc } from 'firebase/firestore'
 import { db } from '../firebase'
+import { DEFAULT_ROAS_BREAKEVEN } from '../utils/alerts'
 
 // Client registry, shared across the whole team: collection `clients`, one doc per Sheet
 // ID (using the Sheet ID itself as the doc id — adding the same sheet twice just upserts
@@ -28,11 +29,12 @@ export function useClients() {
     return () => unsub()
   }, [])
 
-  const addClient = useCallback(async (name, sheetId, celula, etiqueta) => {
+  const addClient = useCallback(async (name, sheetId, celula, etiqueta, roasBreakeven) => {
     await setDoc(doc(db, 'clients', sheetId.trim()), {
       name: name.trim(),
       celula: (celula || '').trim(),
       etiqueta: etiqueta || '',
+      roasBreakeven: Number(roasBreakeven) > 0 ? Number(roasBreakeven) : DEFAULT_ROAS_BREAKEVEN,
       addedAt: Date.now(),
     })
   }, [])

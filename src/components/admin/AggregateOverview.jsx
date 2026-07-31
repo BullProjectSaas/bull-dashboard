@@ -99,7 +99,7 @@ export default function AggregateOverview({ clients }) {
           celula: c.celula,
           etiqueta: c.etiqueta,
           ok: true,
-          alerts: computeClientAlerts(raw),
+          alerts: computeClientAlerts(raw, c.roasBreakeven),
           ...dash.scorecards,
         }
       }),

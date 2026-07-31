@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { C } from '../../theme'
 import { CLIENT_TAGS, tagColor } from '../../utils/clientTags'
+import { DEFAULT_ROAS_BREAKEVEN } from '../../utils/alerts'
 import Section from '../Section'
 
 const inputStyle = {
@@ -47,9 +48,16 @@ function TagBadge({ value }) {
 
 function ClientRow({ client, updateClient, removeClient }) {
   const [celula, setCelula] = useState(client.celula || '')
+  const [breakeven, setBreakeven] = useState(client.roasBreakeven ?? DEFAULT_ROAS_BREAKEVEN)
 
   const saveCelula = () => {
     if (celula.trim() !== (client.celula || '')) updateClient(client.sheetId, { celula: celula.trim() })
+  }
+
+  const saveBreakeven = () => {
+    const n = Number(breakeven)
+    const value = n > 0 ? n : DEFAULT_ROAS_BREAKEVEN
+    if (value !== (client.roasBreakeven ?? DEFAULT_ROAS_BREAKEVEN)) updateClient(client.sheetId, { roasBreakeven: value })
   }
 
   return (
@@ -91,6 +99,20 @@ function ClientRow({ client, updateClient, removeClient }) {
 
       <TagBadge value={client.etiqueta} />
 
+      <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: C.muted }}>
+        Breakeven
+        <input
+          type="number"
+          step="0.1"
+          min="0"
+          value={breakeven}
+          onChange={(e) => setBreakeven(e.target.value)}
+          onBlur={saveBreakeven}
+          style={{ ...inputStyle, flex: 'unset', width: 60, minWidth: 0, padding: '6px 8px' }}
+        />
+        x
+      </label>
+
       <span style={{ fontSize: 11, color: C.muted, fontFamily: 'monospace' }}>
         {client.sheetId.slice(0, 8)}…{client.sheetId.slice(-4)}
       </span>
@@ -118,6 +140,7 @@ export default function ClientManager({ clients, ready, error, addClient, update
   const [sheetId, setSheetId] = useState('')
   const [celula, setCelula] = useState('')
   const [etiqueta, setEtiqueta] = useState('')
+  const [roasBreakeven, setRoasBreakeven] = useState('')
   const [saving, setSaving] = useState(false)
 
   const celulas = useMemo(
@@ -129,12 +152,13 @@ export default function ClientManager({ clients, ready, error, addClient, update
     e.preventDefault()
     if (!name.trim() || !sheetId.trim()) return
     setSaving(true)
-    await addClient(name, sheetId, celula, etiqueta).catch(() => {})
+    await addClient(name, sheetId, celula, etiqueta, roasBreakeven).catch(() => {})
     setSaving(false)
     setName('')
     setSheetId('')
     setCelula('')
     setEtiqueta('')
+    setRoasBreakeven('')
   }
 
   return (
@@ -157,6 +181,15 @@ export default function ClientManager({ clients, ready, error, addClient, update
             </option>
           ))}
         </select>
+        <input
+          type="number"
+          step="0.1"
+          min="0"
+          placeholder={`ROAS breakeven (${DEFAULT_ROAS_BREAKEVEN})`}
+          value={roasBreakeven}
+          onChange={(e) => setRoasBreakeven(e.target.value)}
+          style={{ ...inputStyle, flex: 'unset', width: 170 }}
+        />
         <button
           type="submit"
           disabled={saving}

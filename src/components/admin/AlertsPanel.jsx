@@ -56,7 +56,7 @@ export default function AlertsPanel({ clients }) {
                     padding: '3px 9px',
                   }}
                 >
-                  ROAS 30d {fmtROAS(c.alerts.roas30d)}
+                  ROAS 30d {fmtROAS(c.alerts.roas30d)} · breakeven {c.alerts.roasBreakeven.toFixed(1)}x
                 </span>
               )}
               <a
