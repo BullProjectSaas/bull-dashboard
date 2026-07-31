@@ -125,7 +125,7 @@ export default function App() {
           <span>No se pudo actualizar: {error}</span>
           <button
             onClick={refetch}
-            style={{ background: 'transparent', border: `1px solid ${C.red}`, color: C.red, borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}
+            style={{ background: 'transparent', border: `1px solid ${C.red}`, color: C.red, borderRadius: 10, padding: '4px 10px', cursor: 'pointer' }}
           >
             Reintentar
           </button>
@@ -173,10 +173,10 @@ export default function App() {
             <button
               onClick={() => setCumulative((v) => !v)}
               style={{
-                background: 'transparent',
+                background: C.bg3,
                 color: C.muted,
                 border: `1px solid ${C.border}`,
-                borderRadius: 6,
+                borderRadius: 999,
                 padding: '5px 12px',
                 fontSize: 12,
                 cursor: 'pointer',

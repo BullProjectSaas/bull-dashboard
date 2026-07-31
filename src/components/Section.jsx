@@ -6,12 +6,25 @@ export default function Section({ title, actions, children }) {
       style={{
         background: C.bg2,
         border: `1px solid ${C.border}`,
-        borderRadius: 12,
-        padding: '18px 20px',
+        borderRadius: 16,
+        padding: '20px 22px',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
-        <h2 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.text, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+        <h2
+          style={{
+            margin: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 9,
+            fontSize: 13,
+            fontWeight: 700,
+            color: C.text,
+            textTransform: 'uppercase',
+            letterSpacing: 0.6,
+          }}
+        >
+          <span style={{ width: 6, height: 6, borderRadius: 2, background: C.gold, display: 'inline-block' }} />
           {title}
         </h2>
         {actions}

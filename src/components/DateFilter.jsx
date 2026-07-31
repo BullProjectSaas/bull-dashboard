@@ -2,10 +2,10 @@ import { C } from '../theme'
 import { toDateKey } from '../utils/metrics'
 
 const inputStyle = {
-  background: C.bg2,
+  background: C.bg3,
   color: C.text,
   border: `1px solid ${C.border}`,
-  borderRadius: 6,
+  borderRadius: 10,
   padding: '8px 10px',
   fontSize: 13,
   fontFamily: 'inherit',
@@ -65,8 +65,8 @@ export default function DateFilter({
           style={{
             background: C.gold,
             color: C.bg,
-            border: 'none',
-            borderRadius: 6,
+            border: `1px solid ${C.gold}`,
+            borderRadius: 10,
             padding: '9px 18px',
             fontWeight: 700,
             fontSize: 13,
@@ -81,7 +81,7 @@ export default function DateFilter({
             background: 'transparent',
             color: C.muted,
             border: `1px solid ${C.border}`,
-            borderRadius: 6,
+            borderRadius: 10,
             padding: '9px 18px',
             fontSize: 13,
             cursor: 'pointer',
@@ -97,7 +97,7 @@ export default function DateFilter({
             background: compareEnabled ? C.gold : 'transparent',
             color: compareEnabled ? C.bg : active ? C.text : C.muted,
             border: `1px solid ${compareEnabled ? C.gold : C.border}`,
-            borderRadius: 6,
+            borderRadius: 10,
             padding: '9px 18px',
             fontWeight: compareEnabled ? 700 : 400,
             fontSize: 13,
@@ -107,7 +107,24 @@ export default function DateFilter({
         >
           Comparar vs. período anterior
         </button>
-        {active && <span style={{ fontSize: 12, color: C.gold, marginLeft: 4 }}>Filtro activo</span>}
+        {active && (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 12,
+              color: C.gold,
+              padding: '4px 10px',
+              borderRadius: 999,
+              border: `1px solid rgba(201,168,76,0.35)`,
+              background: 'rgba(201,168,76,0.08)',
+            }}
+          >
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.gold }} />
+            Filtro activo
+          </span>
+        )}
       </div>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -116,7 +133,7 @@ export default function DateFilter({
             key={p.label}
             onClick={() => onPreset(p.from, p.to)}
             style={{
-              background: 'transparent',
+              background: C.bg3,
               color: C.muted,
               border: `1px solid ${C.border}`,
               borderRadius: 999,

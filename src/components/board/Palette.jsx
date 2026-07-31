@@ -38,7 +38,18 @@ export default function Palette({ byAd, tally, placedAdNames, placedGroupNames, 
   const availableAdsets = adsets.filter((a) => !placedGroupNames.has(a))
 
   return (
-    <div style={{ width: 220, flexShrink: 0, borderRight: `1px solid ${C.border}`, paddingRight: 16, overflowY: 'auto', maxHeight: 560 }}>
+    <div
+      style={{
+        width: 220,
+        flexShrink: 0,
+        height: 560,
+        minHeight: 0,
+        borderRight: `1px solid ${C.border}`,
+        paddingRight: 16,
+        overflowY: 'auto',
+        boxSizing: 'border-box',
+      }}
+    >
       <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>
         Hacé click para agregar un bloque al lienzo y despues arrastralo a su lugar.
       </p>

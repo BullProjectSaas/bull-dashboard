@@ -8,7 +8,7 @@ import GroupNode from './GroupNode'
 import Palette from './Palette'
 import Legend from './Legend'
 
-const nodeTypes = { ad: AdNode, group: GroupNode }
+const nodeTypes = { ad: AdNode, container: GroupNode }
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `n_${Date.now()}_${Math.random().toString(36).slice(2)}`)
 
@@ -30,12 +30,12 @@ function CampaignBoardInner({ sheetId, byAd, tally }) {
   const scheduleFit = useCallback(() => {
     // React Flow measures a new node's size asynchronously (ResizeObserver) before it can
     // be included in fitView's bounding box — a bare requestAnimationFrame fires too early.
-    setTimeout(() => fitView({ padding: 0.3, duration: 300 }), 60)
+    setTimeout(() => fitView({ padding: 0.3, duration: 300 }), 120)
   }, [fitView])
 
   const byAdMap = useMemo(() => new Map(byAd.map((a) => [a.ad, a])), [byAd])
   const placedAdNames = useMemo(() => new Set(rawNodes.filter((n) => n.data.linkedAd).map((n) => n.data.linkedAd)), [rawNodes])
-  const placedGroupNames = useMemo(() => new Set(rawNodes.filter((n) => n.type === 'group').map((n) => n.data.label)), [rawNodes])
+  const placedGroupNames = useMemo(() => new Set(rawNodes.filter((n) => n.type === 'container').map((n) => n.data.label)), [rawNodes])
 
   const nextPosition = () => {
     const count = nodesRef.current.length
@@ -80,8 +80,13 @@ function CampaignBoardInner({ sheetId, byAd, tally }) {
     persist(nodesRef.current, next)
   }, [persist, setRawEdges])
 
+  // Explicit width so React Flow doesn't have to wait on ResizeObserver to measure a
+  // freshly-added node before it can position handles/edges and fitView — without it,
+  // fast-following adds could momentarily draw an edge against a stale/default-sized box.
+  const NODE_WIDTH = 190
+
   const onAddAd = useCallback((adName) => {
-    const node = { id: uid(), type: 'ad', position: nextPosition(), data: { kind: 'ad', label: adName, linkedAd: adName } }
+    const node = { id: uid(), type: 'ad', position: nextPosition(), style: { width: NODE_WIDTH }, data: { kind: 'ad', label: adName, linkedAd: adName } }
     const next = [...nodesRef.current, node]
     setRawNodes(next)
     persist(next, edgesRef.current)
@@ -89,7 +94,7 @@ function CampaignBoardInner({ sheetId, byAd, tally }) {
   }, [persist, setRawNodes, scheduleFit])
 
   const onAddManualAd = useCallback((label) => {
-    const node = { id: uid(), type: 'ad', position: nextPosition(), data: { kind: 'ad', label, linkedAd: null } }
+    const node = { id: uid(), type: 'ad', position: nextPosition(), style: { width: NODE_WIDTH }, data: { kind: 'ad', label, linkedAd: null } }
     const next = [...nodesRef.current, node]
     setRawNodes(next)
     persist(next, edgesRef.current)
@@ -99,8 +104,9 @@ function CampaignBoardInner({ sheetId, byAd, tally }) {
   const onAddGroup = useCallback((kind, label) => {
     const node = {
       id: uid(),
-      type: 'group',
+      type: 'container',
       position: nextPosition(),
+      style: { width: NODE_WIDTH },
       data: { kind, label, color: kind === 'campaign' ? '#7BD98A' : '#E8EDF2' },
     }
     const next = [...nodesRef.current, node]
@@ -136,7 +142,7 @@ function CampaignBoardInner({ sheetId, byAd, tally }) {
       {!ready ? (
         <p style={{ color: C.muted, fontSize: 13 }}>Cargando tablero…</p>
       ) : (
-        <div style={{ display: 'flex', gap: 16 }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
           <Palette
             byAd={byAd}
             tally={tally}

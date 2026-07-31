@@ -1,5 +1,35 @@
 import { C } from '../theme'
 
+function Mark() {
+  return (
+    <svg width="26" height="24" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13 0L26 24H16.5L13 17L9.5 24H0L13 0Z" fill={C.gold} />
+      <path d="M13 6L20 20H15.8L13 14.5L10.2 20H6L13 6Z" fill={C.bg} />
+    </svg>
+  )
+}
+
+function Pill({ children, dot }) {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 7,
+        padding: '5px 12px',
+        borderRadius: 999,
+        border: `1px solid ${C.border}`,
+        background: 'rgba(255,255,255,0.03)',
+        fontSize: 12,
+        color: C.muted,
+      }}
+    >
+      {dot && <span style={{ width: 6, height: 6, borderRadius: '50%', background: dot, flexShrink: 0 }} />}
+      {children}
+    </span>
+  )
+}
+
 export default function Header({ sheetId, updatedAt, loading }) {
   const shortId = sheetId ? `${sheetId.slice(0, 8)}…${sheetId.slice(-4)}` : '—'
   const updatedLabel = updatedAt
@@ -18,40 +48,29 @@ export default function Header({ sheetId, updatedAt, loading }) {
         flexWrap: 'wrap',
         gap: 12,
         padding: '16px 24px',
-        background: C.navy,
+        background: 'rgba(27,47,78,0.92)',
         borderBottom: `1px solid ${C.border}`,
-        backdropFilter: 'blur(6px)',
+        backdropFilter: 'blur(8px)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-        <span style={{ fontSize: 22 }}>🐂</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <Mark />
         <h1
           style={{
             margin: 0,
-            fontSize: 18,
+            fontSize: 17,
             fontWeight: 800,
-            letterSpacing: 1.5,
-            color: C.gold,
+            letterSpacing: 1.2,
+            color: C.text,
             textTransform: 'uppercase',
           }}
         >
-          Bull Partners<span style={{ fontSize: 10, verticalAlign: 'super' }}>™</span>
+          Bull Partners<span style={{ fontSize: 10, verticalAlign: 'super', color: C.gold }}>™</span>
         </h1>
-        <span style={{ fontSize: 12, color: C.muted, fontFamily: 'monospace' }}>{shortId}</span>
+        <Pill dot={C.gold}>{shortId}</Pill>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: C.muted }}>
-        <span
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: loading ? C.amber : C.green,
-            display: 'inline-block',
-          }}
-        />
-        <span>{loading ? 'Actualizando…' : `Última actualización: ${updatedLabel}`}</span>
-      </div>
+      <Pill dot={loading ? C.amber : C.green}>{loading ? 'Actualizando…' : `Actualizado ${updatedLabel}`}</Pill>
     </header>
   )
 }
