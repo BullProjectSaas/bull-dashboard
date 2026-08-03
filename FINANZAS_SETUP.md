@@ -16,8 +16,9 @@ contraseña compartida, a diferencia del resto del panel).
 ## 3. Publicar las reglas de seguridad de Firestore
 
 Firestore Database → pestaña **Rules** → reemplazar el contenido por el de
-[`firestore.rules`](./firestore.rules) de este repo, **cambiando antes** la lista de emails de
-`isDirectivo()` por los emails reales que cargaste en el paso 2 → **Publish**.
+[`firestore.rules`](./firestore.rules) de este repo (ya tiene el email del directivo cargado) →
+**Publish**. Si sumás más directivos más adelante, hay que agregar su email a la lista de
+`isDirectivo()` en ese archivo y volver a publicar.
 
 Sin este paso, cualquiera que sepa leer el código del sitio podría escribir directo en las
 colecciones de Finanzas sin pasar por el login — las reglas son la protección real, no el login

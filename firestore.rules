@@ -6,16 +6,14 @@ rules_version = '2';
 // shared password (enforced only in the UI, not here — matches how it's always worked).
 //
 // Everything under the Finanzas area is real money data, so it's gated on Firebase
-// Authentication instead: only the emails listed below may read or write. Replace the
-// placeholder list with the real directivo emails before publishing these rules.
+// Authentication instead: only the emails listed below may read or write. Add more emails
+// to the list as more directivos get accounts.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function isDirectivo() {
       return request.auth != null && request.auth.token.email in [
-        // TODO: reemplazar por los emails reales de los directivos
-        'directivo1@bullpartners.com',
-        'directivo2@bullpartners.com'
+        'leonellallanapersonal@gmail.com'
       ];
     }
 
