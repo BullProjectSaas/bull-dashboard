@@ -4,6 +4,7 @@ import { useFinanceAuth } from '../../hooks/useFinanceAuth'
 import { useFinanceSettings } from '../../hooks/useFinanceSettings'
 import FinanceLoginGate from './FinanceLoginGate'
 import AccountsOverview from './AccountsOverview'
+import SettingsOverview from './SettingsOverview'
 import ComingSoon from './ComingSoon'
 
 const TABS = [
@@ -12,57 +13,59 @@ const TABS = [
   { key: 'colaboradores', label: 'Colaboradores' },
   { key: 'liquidaciones', label: 'Liquidaciones' },
   { key: 'directivos', label: 'Distribución directivos' },
+  { key: 'configuracion', label: 'Configuración' },
   { key: 'dashboard', label: 'Dashboard' },
 ]
 
-function SeedBanner({ onSeed }) {
+function SeedBanner({ onSeed, error }) {
   const [seeding, setSeeding] = useState(false)
   return (
     <div
       style={{
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 12,
-        flexWrap: 'wrap',
+        flexDirection: 'column',
+        gap: 10,
         background: 'rgba(245,158,11,0.1)',
         border: `1px solid ${C.amber}55`,
         borderRadius: 12,
         padding: '12px 16px',
       }}
     >
-      <span style={{ fontSize: 13, color: C.text }}>
-        Todavía no se cargó la configuración fija (tramos, niveles, escalones de directivos, plantillas ISA).
-      </span>
-      <button
-        onClick={async () => {
-          setSeeding(true)
-          await onSeed()
-          setSeeding(false)
-        }}
-        disabled={seeding}
-        style={{
-          background: C.gold,
-          color: C.bg,
-          border: 'none',
-          borderRadius: 10,
-          padding: '8px 16px',
-          fontWeight: 700,
-          fontSize: 13,
-          cursor: seeding ? 'default' : 'pointer',
-          opacity: seeding ? 0.7 : 1,
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {seeding ? 'Cargando…' : 'Inicializar configuración'}
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 13, color: C.text }}>
+          Todavía no se cargó la configuración fija (tramos, niveles, escalones de directivos, plantillas ISA).
+        </span>
+        <button
+          onClick={async () => {
+            setSeeding(true)
+            await onSeed()
+            setSeeding(false)
+          }}
+          disabled={seeding}
+          style={{
+            background: C.gold,
+            color: C.bg,
+            border: 'none',
+            borderRadius: 10,
+            padding: '8px 16px',
+            fontWeight: 700,
+            fontSize: 13,
+            cursor: seeding ? 'default' : 'pointer',
+            opacity: seeding ? 0.7 : 1,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {seeding ? 'Cargando…' : 'Inicializar configuración'}
+        </button>
+      </div>
+      {error && <span style={{ fontSize: 12, color: C.red }}>Error: {error}</span>}
     </div>
   )
 }
 
 export default function FinanceApp() {
   const { user, loading, error, signIn, signOutUser } = useFinanceAuth()
-  const { needsSeed, seedDefaults } = useFinanceSettings()
+  const { settings, needsSeed, seedDefaults, error: settingsError } = useFinanceSettings()
   const [tab, setTab] = useState('cuentas')
 
   if (loading) return <p style={{ fontSize: 13, color: C.muted, padding: 24 }}>Cargando…</p>
@@ -102,13 +105,14 @@ export default function FinanceApp() {
         </div>
       </div>
 
-      {needsSeed && <SeedBanner onSeed={seedDefaults} />}
+      {needsSeed && <SeedBanner onSeed={seedDefaults} error={settingsError} />}
 
       {tab === 'cuentas' && <AccountsOverview />}
       {tab === 'movimientos' && <ComingSoon title="Pagos e ingresos" />}
       {tab === 'colaboradores' && <ComingSoon title="Colaboradores" />}
       {tab === 'liquidaciones' && <ComingSoon title="Liquidaciones" />}
       {tab === 'directivos' && <ComingSoon title="Distribución directivos" />}
+      {tab === 'configuracion' && <SettingsOverview settings={settings} />}
       {tab === 'dashboard' && <ComingSoon title="Dashboard financiero" />}
     </div>
   )

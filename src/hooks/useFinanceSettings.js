@@ -12,23 +12,37 @@ const DOC_REF = doc(db, 'financeSettings', DOC_ID)
 export function useFinanceSettings() {
   const [settings, setSettings] = useState(null)
   const [ready, setReady] = useState(false)
+  const [error, setError] = useState(null)
 
-  useEffect(() => onSnapshot(DOC_REF, (snap) => {
-    setSettings(snap.exists() ? snap.data() : null)
-    setReady(true)
-  }), [])
+  useEffect(() => onSnapshot(
+    DOC_REF,
+    (snap) => {
+      setSettings(snap.exists() ? snap.data() : null)
+      setReady(true)
+      setError(null)
+    },
+    (err) => {
+      setError(err.message)
+      setReady(true)
+    },
+  ), [])
 
   const seedDefaults = useCallback(async () => {
-    const existing = await getDoc(DOC_REF)
-    if (existing.exists()) return
-    await setDoc(DOC_REF, {
-      tramosEquipoBull: TRAMOS_EQUIPO_BULL,
-      nivelesReparto: NIVELES_REPARTO,
-      directivosTiers: DIRECTIVOS_TIERS,
-      isaTemplates: ISA_TEMPLATES,
-      seededAt: Date.now(),
-    })
+    setError(null)
+    try {
+      const existing = await getDoc(DOC_REF)
+      if (existing.exists()) return
+      await setDoc(DOC_REF, {
+        tramosEquipoBull: TRAMOS_EQUIPO_BULL,
+        nivelesReparto: NIVELES_REPARTO,
+        directivosTiers: DIRECTIVOS_TIERS,
+        isaTemplates: ISA_TEMPLATES,
+        seededAt: Date.now(),
+      })
+    } catch (err) {
+      setError(err.message)
+    }
   }, [])
 
-  return { settings, ready, needsSeed: ready && !settings, seedDefaults }
+  return { settings, ready, error, needsSeed: ready && !settings, seedDefaults }
 }
