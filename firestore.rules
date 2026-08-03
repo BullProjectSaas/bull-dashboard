@@ -2,8 +2,8 @@ rules_version = '2';
 
 // Bull Dashboard — Firestore security rules.
 //
-// `clients` keeps the pre-existing behavior: readable/writable by anyone with the app's
-// shared password (enforced only in the UI, not here — matches how it's always worked).
+// `boards` and `clients` keep the pre-existing behavior: readable/writable by anyone with the
+// app's shared password (enforced only in the UI, not here — matches how it's always worked).
 //
 // Everything under the Finanzas area is real money data, so it's gated on Firebase
 // Authentication instead: only the emails listed below may read or write. Add more emails
@@ -15,6 +15,10 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email in [
         'leonellallanapersonal@gmail.com'
       ];
+    }
+
+    match /boards/{boardId} {
+      allow read, write: if true;
     }
 
     match /clients/{sheetId} {
