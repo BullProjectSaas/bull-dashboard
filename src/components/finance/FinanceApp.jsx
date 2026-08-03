@@ -3,18 +3,16 @@ import { C } from '../../theme'
 import { useFinanceAuth } from '../../hooks/useFinanceAuth'
 import { useFinanceSettings } from '../../hooks/useFinanceSettings'
 import FinanceLoginGate from './FinanceLoginGate'
-import AccountsOverview from './AccountsOverview'
+import FinanceDashboard from './FinanceDashboard'
 import SettingsOverview from './SettingsOverview'
 import ComingSoon from './ComingSoon'
 
 const TABS = [
-  { key: 'cuentas', label: 'Cuentas' },
+  { key: 'dashboard', label: 'Dashboard' },
   { key: 'movimientos', label: 'Pagos e ingresos' },
   { key: 'colaboradores', label: 'Colaboradores' },
   { key: 'liquidaciones', label: 'Liquidaciones' },
-  { key: 'directivos', label: 'Distribución directivos' },
   { key: 'configuracion', label: 'Configuración' },
-  { key: 'dashboard', label: 'Dashboard' },
 ]
 
 function SeedBanner({ onSeed, error }) {
@@ -66,7 +64,7 @@ function SeedBanner({ onSeed, error }) {
 export default function FinanceApp() {
   const { user, loading, error, signIn, signOutUser } = useFinanceAuth()
   const { settings, needsSeed, seedDefaults, error: settingsError } = useFinanceSettings()
-  const [tab, setTab] = useState('cuentas')
+  const [tab, setTab] = useState('dashboard')
 
   if (loading) return <p style={{ fontSize: 13, color: C.muted, padding: 24 }}>Cargando…</p>
   if (!user) return <FinanceLoginGate signIn={signIn} error={error} />
@@ -107,13 +105,11 @@ export default function FinanceApp() {
 
       {needsSeed && <SeedBanner onSeed={seedDefaults} error={settingsError} />}
 
-      {tab === 'cuentas' && <AccountsOverview />}
+      {tab === 'dashboard' && <FinanceDashboard />}
       {tab === 'movimientos' && <ComingSoon title="Pagos e ingresos" />}
       {tab === 'colaboradores' && <ComingSoon title="Colaboradores" />}
       {tab === 'liquidaciones' && <ComingSoon title="Liquidaciones" />}
-      {tab === 'directivos' && <ComingSoon title="Distribución directivos" />}
       {tab === 'configuracion' && <SettingsOverview settings={settings} />}
-      {tab === 'dashboard' && <ComingSoon title="Dashboard financiero" />}
     </div>
   )
 }
