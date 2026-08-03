@@ -52,7 +52,7 @@ export default function AccountsOverview() {
             <span style={{ fontSize: 24, fontWeight: 800, color: C.gold }}>{fmtMoney(total)}</span>
           </div>
           <p style={{ fontSize: 11, color: C.muted, marginTop: 14, marginBottom: 0 }}>
-            Los saldos se calculan a partir de los pagos e ingresos confirmados (próximamente en esta sección).
+            Los saldos se calculan a partir de los pagos e ingresos confirmados en "Pagos e ingresos".
           </p>
         </>
       )}

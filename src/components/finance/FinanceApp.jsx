@@ -5,6 +5,7 @@ import { useFinanceSettings } from '../../hooks/useFinanceSettings'
 import FinanceLoginGate from './FinanceLoginGate'
 import FinanceDashboard from './FinanceDashboard'
 import SettingsOverview from './SettingsOverview'
+import MovementsPanel from './MovementsPanel'
 import ComingSoon from './ComingSoon'
 
 const TABS = [
@@ -106,7 +107,7 @@ export default function FinanceApp() {
       {needsSeed && <SeedBanner onSeed={seedDefaults} error={settingsError} />}
 
       {tab === 'dashboard' && <FinanceDashboard />}
-      {tab === 'movimientos' && <ComingSoon title="Pagos e ingresos" />}
+      {tab === 'movimientos' && <MovementsPanel userEmail={user.email} />}
       {tab === 'colaboradores' && <ComingSoon title="Colaboradores" />}
       {tab === 'liquidaciones' && <ComingSoon title="Liquidaciones" />}
       {tab === 'configuracion' && <SettingsOverview settings={settings} />}
