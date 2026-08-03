@@ -9,23 +9,29 @@ const DOC_REF = doc(db, 'financeSettings', DOC_ID)
 // The fixed, company-wide tables (tramos equipo/Bull, niveles de reparto, escalones de
 // directivos, plantillas ISA). Seeded into Firestore on first use so they can be tweaked by a
 // directivo later without a code deploy, instead of living only as constants in the bundle.
-export function useFinanceSettings() {
+// `enabled` must stay false until Firebase Auth confirms a logged-in user — otherwise this
+// subscribes before request.auth exists, Firestore denies it once, and (since onSnapshot
+// doesn't retry on its own) the error sticks around even after login succeeds.
+export function useFinanceSettings(enabled = true) {
   const [settings, setSettings] = useState(null)
-  const [ready, setReady] = useState(false)
+  const [ready, setReady] = useState(!enabled)
   const [error, setError] = useState(null)
 
-  useEffect(() => onSnapshot(
-    DOC_REF,
-    (snap) => {
-      setSettings(snap.exists() ? snap.data() : null)
-      setReady(true)
-      setError(null)
-    },
-    (err) => {
-      setError(err.message)
-      setReady(true)
-    },
-  ), [])
+  useEffect(() => {
+    if (!enabled) return undefined
+    return onSnapshot(
+      DOC_REF,
+      (snap) => {
+        setSettings(snap.exists() ? snap.data() : null)
+        setReady(true)
+        setError(null)
+      },
+      (err) => {
+        setError(err.message)
+        setReady(true)
+      },
+    )
+  }, [enabled])
 
   const seedDefaults = useCallback(async () => {
     setError(null)

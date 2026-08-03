@@ -64,7 +64,7 @@ function SeedBanner({ onSeed, error }) {
 
 export default function FinanceApp() {
   const { user, loading, error, signIn, signOutUser } = useFinanceAuth()
-  const { settings, needsSeed, seedDefaults, error: settingsError } = useFinanceSettings()
+  const { settings, needsSeed, seedDefaults, error: settingsError } = useFinanceSettings(Boolean(user))
   const [tab, setTab] = useState('dashboard')
 
   if (loading) return <p style={{ fontSize: 13, color: C.muted, padding: 24 }}>Cargando…</p>
