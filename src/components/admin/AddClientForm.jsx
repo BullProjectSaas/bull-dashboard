@@ -12,6 +12,7 @@ export default function AddClientForm({ clients, addClient, onAdded }) {
   const [roasBreakeven, setRoasBreakeven] = useState('')
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [lastAdded, setLastAdded] = useState(null)
 
   const celulas = useMemo(
     () => Array.from(new Set((clients || []).map((c) => c.celula).filter(Boolean))).sort(),
@@ -22,16 +23,23 @@ export default function AddClientForm({ clients, addClient, onAdded }) {
     e.preventDefault()
     if (!name.trim() || !sheetId.trim()) return
     setSaving(true)
-    await addClient(name, sheetId, celula, etiqueta, roasBreakeven).catch(() => {})
+    const trimmedName = name.trim()
+    const trimmedSheetId = sheetId.trim()
+    let ok = true
+    await addClient(name, sheetId, celula, etiqueta, roasBreakeven).catch(() => {
+      ok = false
+    })
     setSaving(false)
+    if (!ok) return
     setName('')
     setSheetId('')
     setCelula('')
     setEtiqueta('')
     setRoasBreakeven('')
     setDone(true)
+    setLastAdded({ name: trimmedName, sheetId: trimmedSheetId })
     onAdded?.()
-    setTimeout(() => setDone(false), 3000)
+    setTimeout(() => setDone(false), 8000)
   }
 
   return (
@@ -81,7 +89,19 @@ export default function AddClientForm({ clients, addClient, onAdded }) {
           {saving ? 'Guardando…' : 'Agregar'}
         </button>
       </form>
-      {done && <p style={{ fontSize: 12, color: C.green, margin: '10px 0 0' }}>✓ Cliente agregado.</p>}
+      {done && lastAdded && (
+        <p style={{ fontSize: 12, color: C.green, margin: '10px 0 0' }}>
+          ✓ Cliente <strong>{lastAdded.name}</strong> agregado.{' '}
+          <a
+            href={`${import.meta.env.BASE_URL}?sheet=${lastAdded.sheetId}`}
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: C.gold, fontWeight: 600, textDecoration: 'none' }}
+          >
+            Ver dashboard ↗
+          </a>
+        </p>
+      )}
     </>
   )
 }
