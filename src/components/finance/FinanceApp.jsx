@@ -6,12 +6,15 @@ import FinanceLoginGate from './FinanceLoginGate'
 import FinanceDashboard from './FinanceDashboard'
 import SettingsOverview from './SettingsOverview'
 import MovementsPanel from './MovementsPanel'
+import CollaboradoresPanel from './CollaboradoresPanel'
+import ClientFinanceConfig from './ClientFinanceConfig'
 import ComingSoon from './ComingSoon'
 
 const TABS = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'movimientos', label: 'Pagos e ingresos' },
   { key: 'colaboradores', label: 'Colaboradores' },
+  { key: 'clientesFinanzas', label: 'Config. clientes' },
   { key: 'liquidaciones', label: 'Liquidaciones' },
   { key: 'configuracion', label: 'Configuración' },
 ]
@@ -108,7 +111,8 @@ export default function FinanceApp() {
 
       {tab === 'dashboard' && <FinanceDashboard />}
       {tab === 'movimientos' && <MovementsPanel userEmail={user.email} />}
-      {tab === 'colaboradores' && <ComingSoon title="Colaboradores" />}
+      {tab === 'colaboradores' && <CollaboradoresPanel />}
+      {tab === 'clientesFinanzas' && <ClientFinanceConfig />}
       {tab === 'liquidaciones' && <ComingSoon title="Liquidaciones" />}
       {tab === 'configuracion' && <SettingsOverview settings={settings} />}
     </div>
