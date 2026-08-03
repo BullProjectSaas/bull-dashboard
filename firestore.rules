@@ -1,0 +1,34 @@
+rules_version = '2';
+
+// Bull Dashboard — Firestore security rules.
+//
+// `clients` keeps the pre-existing behavior: readable/writable by anyone with the app's
+// shared password (enforced only in the UI, not here — matches how it's always worked).
+//
+// Everything under the Finanzas area is real money data, so it's gated on Firebase
+// Authentication instead: only the emails listed below may read or write. Replace the
+// placeholder list with the real directivo emails before publishing these rules.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isDirectivo() {
+      return request.auth != null && request.auth.token.email in [
+        // TODO: reemplazar por los emails reales de los directivos
+        'directivo1@bullpartners.com',
+        'directivo2@bullpartners.com'
+      ];
+    }
+
+    match /clients/{sheetId} {
+      allow read, write: if true;
+    }
+
+    match /financeSettings/{docId} { allow read, write: if isDirectivo(); }
+    match /accounts/{docId} { allow read, write: if isDirectivo(); }
+    match /transactions/{docId} { allow read, write: if isDirectivo(); }
+    match /categories/{docId} { allow read, write: if isDirectivo(); }
+    match /collaborators/{docId} { allow read, write: if isDirectivo(); }
+    match /liquidations/{docId} { allow read, write: if isDirectivo(); }
+    match /directivosDistributions/{docId} { allow read, write: if isDirectivo(); }
+  }
+}
