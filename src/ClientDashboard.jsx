@@ -14,7 +14,7 @@ import {
   roasColor,
 } from './utils/metrics'
 import Header from './components/Header'
-import DateFilter from './components/DateFilter'
+import CompactDateFilter from './components/admin/CompactDateFilter'
 import ScoreCard from './components/ScoreCard'
 import Section from './components/Section'
 import RoasByAdChart from './components/RoasByAdChart'
@@ -37,8 +37,6 @@ function computeForRange(data, from, to) {
 export default function ClientDashboard() {
   const { data, loading, error, sheetId, refetch } = useSheetData()
 
-  const [fromInput, setFromInput] = useState('')
-  const [toInput, setToInput] = useState('')
   const [range, setRange] = useState({ from: '', to: '' })
   const [compareEnabled, setCompareEnabled] = useState(false)
   const [cumulative, setCumulative] = useState(true)
@@ -71,17 +69,9 @@ export default function ClientDashboard() {
     return Object.fromEntries(Object.keys(c).map((k) => [k, pctChange(c[k], p[k])]))
   }, [dashboard, previousDashboard])
 
-  const applyPreset = (from, to) => {
-    setFromInput(from)
-    setToInput(to)
-    setRange({ from, to })
-  }
-
-  const resetFilter = () => {
-    setFromInput('')
-    setToInput('')
-    setRange({ from: '', to: '' })
-    setCompareEnabled(false)
+  const handleRangeChange = (newRange) => {
+    setRange(newRange)
+    if (!newRange.from && !newRange.to) setCompareEnabled(false)
   }
 
   if (loading && !data) return <Spinner />
@@ -93,18 +83,37 @@ export default function ClientDashboard() {
     <div style={{ minHeight: '100vh', color: C.text }}>
       <Header sheetId={sheetId} updatedAt={data?.updatedAt} loading={loading} />
 
-      <DateFilter
-        from={fromInput}
-        to={toInput}
-        onFromChange={setFromInput}
-        onToChange={setToInput}
-        onApply={() => setRange({ from: fromInput, to: toInput })}
-        onReset={resetFilter}
-        onPreset={applyPreset}
-        active={rangeActive}
-        compareEnabled={compareEnabled}
-        onToggleCompare={() => setCompareEnabled((v) => !v)}
-      />
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          flexWrap: 'wrap',
+          padding: '16px 24px',
+          background: C.bg2,
+          borderBottom: `1px solid ${C.border}`,
+        }}
+      >
+        <CompactDateFilter range={range} onChange={handleRangeChange} />
+        <button
+          onClick={() => setCompareEnabled((v) => !v)}
+          disabled={!rangeActive}
+          title={rangeActive ? undefined : 'Aplicá un rango de fechas para comparar'}
+          style={{
+            background: compareEnabled ? C.gold : 'transparent',
+            color: compareEnabled ? C.bg : rangeActive ? C.text : C.muted,
+            border: `1px solid ${compareEnabled ? C.gold : C.border}`,
+            borderRadius: 999,
+            padding: '8px 14px',
+            fontWeight: compareEnabled ? 700 : 400,
+            fontSize: 13,
+            cursor: rangeActive ? 'pointer' : 'not-allowed',
+            opacity: rangeActive ? 1 : 0.5,
+          }}
+        >
+          Comparar vs. período anterior
+        </button>
+      </div>
 
       {error && data && (
         <div
