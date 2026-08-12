@@ -10,12 +10,13 @@ function parseGvizValue(v) {
   return v
 }
 
-// Tolerant header lookup (accents/casing/whitespace), mirrors utils/metrics.js' field()
+// Tolerant header lookup (accents/casing/whitespace/underscores), mirrors utils/metrics.js' field()
 function normKey(s) {
   return String(s ?? '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
+    .replace(/[_-]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 }

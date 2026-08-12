@@ -24,13 +24,16 @@ export const num = (v) => {
   return Number.isFinite(n) ? n : 0
 }
 
-// Google Sheets headers can carry stray whitespace/casing/accents depending on how the
-// sheet was set up; resolve fields tolerantly instead of failing silently on a mismatch.
+// Google Sheets headers can carry stray whitespace/casing/accents/underscores depending on
+// how the sheet was set up (e.g. a hidden Tally field named "utm_content" in code often gets
+// typed as "UTM Content" in the sheet) \u2014 resolve fields tolerantly instead of failing
+// silently on a mismatch.
 const normKey = (s) =>
   String(s ?? '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
+    .replace(/[_-]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 
