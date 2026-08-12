@@ -13,7 +13,8 @@ function computeForRange(raw, from, to) {
   const ventas = filterByDateRange(raw.ventas, 'Fecha de venta', from, to)
   const metricas = filterByDateRange(raw.metricas, 'Day', from, to)
   const tally = filterByDateRange(raw.tally, 'Fecha', from, to)
-  return computeDashboard(ventas, metricas, tally)
+  // Full, unfiltered lead history for phone-based attribution — see ClientDashboard.jsx for why.
+  return computeDashboard(ventas, metricas, tally, raw.tally)
 }
 
 function aggregate(list) {

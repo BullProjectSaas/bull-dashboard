@@ -190,7 +190,12 @@ export const pctChange = (curr, prev) => (prev ? ((curr - prev) / Math.abs(prev)
 
 // ---------- aggregations ----------
 
-function computeByAd(ventas, metricas, tally) {
+// `fullTally` (the whole, unfiltered lead history) is used only for phone-based attribution
+// — a sale this month can easily come from a lead that arrived last month or earlier, so
+// matching against the period-filtered `tally` would miss it and wrongly fall back to "Sin
+// atribución". Lead-count-by-ad below intentionally keeps using the period-filtered `tally`,
+// since "how many leads this ad generated in this period" is meant to stay period-scoped.
+function computeByAd(ventas, metricas, tally, fullTally = tally) {
   const map = new Map()
   const get = (name) => {
     const key = clean(name) || 'Sin atribución'
@@ -200,7 +205,7 @@ function computeByAd(ventas, metricas, tally) {
 
   for (const r of metricas) get(field(r, 'Ad Name')).gasto += num(field(r, 'Amount Spent'))
   for (const r of ventas) {
-    const entry = get(getAttribution(r, tally))
+    const entry = get(getAttribution(r, fullTally))
     entry.facturacion += num(field(r, 'Monto de Venta'))
     entry.ventasCount += 1
   }
@@ -276,7 +281,7 @@ function computeDaily(ventas, metricas) {
   })
 }
 
-export function computeDashboard(ventas, metricas, tally) {
+export function computeDashboard(ventas, metricas, tally, fullTally = tally) {
   const inversion = sum(metricas, 'Amount Spent')
   const facturacion = sum(ventas, 'Monto de Venta')
   const totalLeads = tally.length
@@ -297,7 +302,7 @@ export function computeDashboard(ventas, metricas, tally) {
 
   return {
     scorecards,
-    byAd: computeByAd(ventas, metricas, tally),
+    byAd: computeByAd(ventas, metricas, tally, fullTally),
     byZona: computeByZona(tally),
     byProducto: computeByProducto(ventas),
     daily: computeDaily(ventas, metricas),

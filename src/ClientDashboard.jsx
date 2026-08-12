@@ -31,7 +31,10 @@ function computeForRange(data, from, to) {
   const ventas = filterByDateRange(data.ventas, 'Fecha de venta', from, to)
   const metricas = filterByDateRange(data.metricas, 'Day', from, to)
   const tally = filterByDateRange(data.tally, 'Fecha', from, to)
-  return computeDashboard(ventas, metricas, tally)
+  // Pass the full, unfiltered lead history separately — a sale in this period can come from a
+  // lead that arrived before it started, and matching only against the filtered tally would
+  // miss that lead and wrongly show "Sin atribución".
+  return computeDashboard(ventas, metricas, tally, data.tally)
 }
 
 export default function ClientDashboard() {
