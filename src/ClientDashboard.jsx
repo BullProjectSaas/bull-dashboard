@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { C } from './theme'
 import { useSheetData } from './hooks/useSheetData'
+import { useClientConfig } from './hooks/useClientConfig'
 import {
   computeDashboard,
   filterByDateRange,
@@ -27,18 +28,20 @@ import Spinner from './components/Spinner'
 import ErrorState from './components/ErrorState'
 import CampaignBoard from './components/board/CampaignBoard'
 
-function computeForRange(data, from, to) {
+function computeForRange(data, from, to, excludedAdNames) {
   const ventas = filterByDateRange(data.ventas, 'Fecha de venta', from, to)
   const metricas = filterByDateRange(data.metricas, 'Day', from, to)
   const tally = filterByDateRange(data.tally, 'Fecha', from, to)
   // Pass the full, unfiltered lead history separately — a sale in this period can come from a
   // lead that arrived before it started, and matching only against the filtered tally would
   // miss that lead and wrongly show "Sin atribución".
-  return computeDashboard(ventas, metricas, tally, data.tally)
+  return computeDashboard(ventas, metricas, tally, data.tally, excludedAdNames)
 }
 
 export default function ClientDashboard() {
   const { data, loading, error, sheetId, refetch } = useSheetData()
+  const { config } = useClientConfig(sheetId)
+  const excludedAdNames = useMemo(() => config?.excludedAdNames || [], [config])
 
   const [range, setRange] = useState({ from: '', to: '' })
   const [compareEnabled, setCompareEnabled] = useState(false)
@@ -48,22 +51,22 @@ export default function ClientDashboard() {
 
   const dashboard = useMemo(() => {
     if (!data) return null
-    return computeForRange(data, range.from, range.to)
-  }, [data, range])
+    return computeForRange(data, range.from, range.to, excludedAdNames)
+  }, [data, range, excludedAdNames])
 
   // Full-history (unfiltered) aggregate, for the campaign board — its auto-coloring is a
   // structural/status view of each ad, independent from the scorecards' date filter.
   const fullDashboard = useMemo(() => {
     if (!data) return null
-    return computeDashboard(data.ventas, data.metricas, data.tally)
-  }, [data])
+    return computeDashboard(data.ventas, data.metricas, data.tally, data.tally, excludedAdNames)
+  }, [data, excludedAdNames])
 
   const previousDashboard = useMemo(() => {
     if (!data || !compareEnabled || !rangeActive) return null
     const prev = previousPeriod(range.from, range.to)
     if (!prev) return null
-    return computeForRange(data, prev.from, prev.to)
-  }, [data, compareEnabled, rangeActive, range])
+    return computeForRange(data, prev.from, prev.to, excludedAdNames)
+  }, [data, compareEnabled, rangeActive, range, excludedAdNames])
 
   const deltas = useMemo(() => {
     if (!dashboard || !previousDashboard) return null

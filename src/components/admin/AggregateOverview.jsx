@@ -9,12 +9,12 @@ import AlertsPanel from './AlertsPanel'
 import ScoreCard from '../ScoreCard'
 import Section from '../Section'
 
-function computeForRange(raw, from, to) {
+function computeForRange(raw, from, to, excludedAdNames) {
   const ventas = filterByDateRange(raw.ventas, 'Fecha de venta', from, to)
   const metricas = filterByDateRange(raw.metricas, 'Day', from, to)
   const tally = filterByDateRange(raw.tally, 'Fecha', from, to)
   // Full, unfiltered lead history for phone-based attribution — see ClientDashboard.jsx for why.
-  return computeDashboard(ventas, metricas, tally, raw.tally)
+  return computeDashboard(ventas, metricas, tally, raw.tally, excludedAdNames)
 }
 
 function aggregate(list) {
@@ -96,7 +96,7 @@ export default function AggregateOverview({ clients }) {
       clients.map((c) => {
         const raw = rawByClient[c.sheetId]
         if (!raw) return { name: c.name, sheetId: c.sheetId, celula: c.celula, etiqueta: c.etiqueta, ok: false }
-        const dash = computeForRange(raw, range.from, range.to)
+        const dash = computeForRange(raw, range.from, range.to, c.excludedAdNames)
         const alerts = computeClientAlerts(raw, c.roasBreakeven)
         // Un cliente ya marcado como PAUSADO a mano no necesita que la alerta se lo
         // repita — esa alerta es para pausas inesperadas, no para las que ya sabés.

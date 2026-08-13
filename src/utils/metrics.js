@@ -195,7 +195,13 @@ export const pctChange = (curr, prev) => (prev ? ((curr - prev) / Math.abs(prev)
 // matching against the period-filtered `tally` would miss it and wrongly fall back to "Sin
 // atribución". Lead-count-by-ad below intentionally keeps using the period-filtered `tally`,
 // since "how many leads this ad generated in this period" is meant to stay period-scoped.
-function computeByAd(ventas, metricas, tally, fullTally = tally) {
+// Some clients don't run a per-lead capture form (no real Tally data — `tally` is always
+// empty for them); their only signal of "leads" is the ad platform's own "Results" column.
+// `excludedAdNames` lets a client exclude specific ads from that Results→leads fallback —
+// e.g. a nurture campaign optimized for profile visits, not lead gen, whose "Results" count
+// isn't comparable to a real lead.
+function computeByAd(ventas, metricas, tally, fullTally = tally, excludedAdNames = []) {
+  const excluded = new Set(excludedAdNames.map((n) => clean(n)).filter(Boolean))
   const map = new Map()
   const get = (name) => {
     const key = clean(name) || 'Sin atribución'
@@ -209,7 +215,15 @@ function computeByAd(ventas, metricas, tally, fullTally = tally) {
     entry.facturacion += num(field(r, 'Monto de Venta'))
     entry.ventasCount += 1
   }
-  for (const r of tally) get(field(r, 'utm_content')).leadsCount += 1
+  if (tally.length > 0) {
+    for (const r of tally) get(field(r, 'utm_content')).leadsCount += 1
+  } else {
+    for (const r of metricas) {
+      const adName = clean(field(r, 'Ad Name'))
+      if (adName && excluded.has(adName)) continue
+      get(adName).leadsCount += num(field(r, 'Results'))
+    }
+  }
 
   return Array.from(map.values())
     .map((e) => ({
@@ -281,10 +295,14 @@ function computeDaily(ventas, metricas) {
   })
 }
 
-export function computeDashboard(ventas, metricas, tally, fullTally = tally) {
+export function computeDashboard(ventas, metricas, tally, fullTally = tally, excludedAdNames = []) {
   const inversion = sum(metricas, 'Amount Spent')
   const facturacion = sum(ventas, 'Monto de Venta')
-  const totalLeads = tally.length
+  // No real per-lead data for this client (tally always empty) — fall back to the ad
+  // platform's own "Results" count, skipping any ad explicitly flagged as non-lead-gen.
+  const excluded = new Set(excludedAdNames.map((n) => clean(n)).filter(Boolean))
+  const totalLeads =
+    tally.length > 0 ? tally.length : sum(metricas.filter((r) => !excluded.has(clean(field(r, 'Ad Name')))), 'Results')
   const totalVentas = ventas.length
 
   const scorecards = {
@@ -302,7 +320,7 @@ export function computeDashboard(ventas, metricas, tally, fullTally = tally) {
 
   return {
     scorecards,
-    byAd: computeByAd(ventas, metricas, tally, fullTally),
+    byAd: computeByAd(ventas, metricas, tally, fullTally, excludedAdNames),
     byZona: computeByZona(tally),
     byProducto: computeByProducto(ventas),
     daily: computeDaily(ventas, metricas),
