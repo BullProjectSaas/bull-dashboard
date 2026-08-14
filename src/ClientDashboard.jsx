@@ -27,6 +27,7 @@ import ProductoTable from './components/ProductoTable'
 import Spinner from './components/Spinner'
 import ErrorState from './components/ErrorState'
 import CampaignBoard from './components/board/CampaignBoard'
+import NutricionAdsPanel from './components/NutricionAdsPanel'
 
 function computeForRange(data, from, to, excludedAdNames) {
   const ventas = filterByDateRange(data.ventas, 'Fecha de venta', from, to)
@@ -40,8 +41,13 @@ function computeForRange(data, from, to, excludedAdNames) {
 
 export default function ClientDashboard() {
   const { data, loading, error, sheetId, refetch } = useSheetData()
-  const { config } = useClientConfig(sheetId)
+  const { config, setExcludedAdNames } = useClientConfig(sheetId)
   const excludedAdNames = useMemo(() => config?.excludedAdNames || [], [config])
+
+  const toggleNutricionAd = (adName, checked) => {
+    const next = checked ? [...excludedAdNames, adName] : excludedAdNames.filter((n) => n !== adName)
+    setExcludedAdNames(next)
+  }
 
   const [range, setRange] = useState({ from: '', to: '' })
   const [compareEnabled, setCompareEnabled] = useState(false)
@@ -220,6 +226,12 @@ export default function ClientDashboard() {
         <Section title="Estructura de campañas">
           <CampaignBoard sheetId={sheetId} byAd={fullDashboard.byAd} tally={data.tally} />
         </Section>
+
+        <NutricionAdsPanel
+          adNames={fullDashboard.byAd.map((a) => a.ad).filter((name) => name !== 'Sin atribución')}
+          excludedAdNames={excludedAdNames}
+          onToggle={toggleNutricionAd}
+        />
       </main>
     </div>
   )
