@@ -224,7 +224,7 @@ export default function ClientDashboard() {
         </div>
 
         <Section title="Estructura de campañas">
-          <CampaignBoard sheetId={sheetId} byAd={fullDashboard.byAd} tally={data.tally} />
+          <CampaignBoard sheetId={sheetId} byAd={fullDashboard.byAd} tally={data.tally} metricas={data.metricas} />
         </Section>
 
         <NutricionAdsPanel

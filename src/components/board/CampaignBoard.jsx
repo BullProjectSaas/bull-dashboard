@@ -12,7 +12,7 @@ const nodeTypes = { ad: AdNode, container: GroupNode }
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `n_${Date.now()}_${Math.random().toString(36).slice(2)}`)
 
-function CampaignBoardInner({ sheetId, byAd, tally }) {
+function CampaignBoardInner({ sheetId, byAd, tally, metricas }) {
   const { nodes: rawNodes, setNodes: setRawNodes, edges: rawEdges, setEdges: setRawEdges, ready, syncError, persist } = useBoard(sheetId)
   const { fitView } = useReactFlow()
 
@@ -146,6 +146,7 @@ function CampaignBoardInner({ sheetId, byAd, tally }) {
           <Palette
             byAd={byAd}
             tally={tally}
+            metricas={metricas}
             placedAdNames={placedAdNames}
             placedGroupNames={placedGroupNames}
             onAddAd={onAddAd}

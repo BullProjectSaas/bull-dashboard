@@ -31,9 +31,9 @@ const manualBtn = {
   textAlign: 'left',
 }
 
-export default function Palette({ byAd, tally, placedAdNames, placedGroupNames, onAddAd, onAddGroup, onAddManualAd }) {
+export default function Palette({ byAd, tally, metricas, placedAdNames, placedGroupNames, onAddAd, onAddGroup, onAddManualAd }) {
   const availableAds = getAvailableAds(byAd, placedAdNames)
-  const { campaigns, adsets } = getKnownGroups(tally)
+  const { campaigns, adsets } = getKnownGroups(tally, metricas)
   const availableCampaigns = campaigns.filter((c) => !placedGroupNames.has(c))
   const availableAdsets = adsets.filter((a) => !placedGroupNames.has(a))
 

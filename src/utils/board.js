@@ -37,14 +37,22 @@ export function getAvailableAds(byAd, placedAdNames) {
   return byAd.filter((a) => a.ad !== 'Sin atribución' && !placedAdNames.has(a.ad))
 }
 
-// Campaign/adset names known from Tally's UTM columns, for the structural (non-ad)
-// palette blocks — these don't carry spend data themselves.
-export function getKnownGroups(tally) {
+// Campaign/adset names known from Tally's UTM columns and/or the ad metrics sheet's own
+// "Campaign Name"/"Ad Set Name" columns, for the structural (non-ad) palette blocks — these
+// don't carry spend data themselves. Metrics is the only source for clients with no Tally
+// data at all (see computeDashboard's "Tally Leads" fallback).
+export function getKnownGroups(tally, metricas = []) {
   const campaigns = new Set()
   const adsets = new Set()
   for (const r of tally) {
     const camp = clean(field(r, 'utm_campaign'))
     const adset = clean(field(r, 'utm_adset'))
+    if (camp) campaigns.add(camp)
+    if (adset) adsets.add(adset)
+  }
+  for (const r of metricas) {
+    const camp = clean(field(r, 'Campaign Name'))
+    const adset = clean(field(r, 'Ad Set Name'))
     if (camp) campaigns.add(camp)
     if (adset) adsets.add(adset)
   }
