@@ -6,12 +6,10 @@ import PasswordGate from './components/admin/PasswordGate'
 import ClientManager from './components/admin/ClientManager'
 import ColaboradorView from './components/admin/ColaboradorView'
 import AggregateOverview from './components/admin/AggregateOverview'
-import InboxView from './components/inbox/InboxView'
 
 const TABS = [
   { key: 'resumen', label: 'Resumen' },
   { key: 'clientes', label: 'Clientes' },
-  { key: 'whatsapp', label: 'WhatsApp' },
 ]
 
 export default function AdminApp() {
@@ -94,11 +92,11 @@ export default function AdminApp() {
           </div>
 
           <main style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {tab === 'clientes' && (
+            {tab === 'clientes' ? (
               <ClientManager clients={clients} ready={ready} error={error} addClient={addClient} updateClient={updateClient} removeClient={removeClient} />
+            ) : (
+              <AggregateOverview clients={clients} />
             )}
-            {tab === 'whatsapp' && <InboxView />}
-            {tab === 'resumen' && <AggregateOverview clients={clients} />}
           </main>
         </>
       )}

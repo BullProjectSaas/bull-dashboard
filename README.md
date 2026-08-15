@@ -30,15 +30,6 @@ npm install
 npm run dev
 ```
 
-## Bull CRM — Inbox de WhatsApp (POC)
-
-El panel interno (`#admin`) incluye una pestaña **WhatsApp** que muestra en
-tiempo real las conversaciones recibidas vía WhatsApp Business Cloud API
-(oficial de Meta, sin QR ni WhatsApp Web) y permite responder desde el
-dashboard. Requiere deployar las Cloud Functions de `functions/` y configurar
-el webhook en Meta — instrucciones completas en
-[`WHATSAPP_SETUP.md`](./WHATSAPP_SETUP.md).
-
 ## Build y deploy a GitHub Pages
 
 ```bash
