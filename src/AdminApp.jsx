@@ -6,12 +6,10 @@ import PasswordGate from './components/admin/PasswordGate'
 import ClientManager from './components/admin/ClientManager'
 import ColaboradorView from './components/admin/ColaboradorView'
 import AggregateOverview from './components/admin/AggregateOverview'
-import FinanceApp from './components/finance/FinanceApp'
 
 const TABS = [
   { key: 'resumen', label: 'Resumen' },
   { key: 'clientes', label: 'Clientes' },
-  { key: 'finanzas', label: 'Finanzas' },
 ]
 
 export default function AdminApp() {
@@ -97,7 +95,6 @@ export default function AdminApp() {
             {tab === 'clientes' && (
               <ClientManager clients={clients} ready={ready} error={error} addClient={addClient} updateClient={updateClient} removeClient={removeClient} />
             )}
-            {tab === 'finanzas' && <FinanceApp />}
             {tab === 'resumen' && <AggregateOverview clients={clients} />}
           </main>
         </>
