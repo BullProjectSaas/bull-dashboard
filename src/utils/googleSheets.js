@@ -41,6 +41,7 @@ const REQUIRED_FIELDS = {
   '01 - Data Ventas Form': ['Fecha de venta', 'Monto de Venta'],
   '02 - Métricas Anuncios': ['Day', 'Ad Name'],
   '03 - Tally leads': ['Submitted at'],
+  '04 - Tally leads org': ['Submitted at'],
 }
 
 export async function fetchSheet(sheetId, sheetName) {
@@ -81,11 +82,23 @@ export async function fetchSheet(sheetId, sheetName) {
   return rows
 }
 
+// "04 - Tally leads org" is an optional second leads form (organic, non-paid traffic) some
+// clients add alongside the regular one — most clients don't have it. Treat a missing sheet
+// as "no organic leads yet" instead of failing the whole dashboard over an optional tab.
+async function fetchSheetOptional(sheetId, sheetName) {
+  try {
+    return await fetchSheet(sheetId, sheetName)
+  } catch {
+    return []
+  }
+}
+
 export async function fetchAllSheets(sheetId) {
-  const [ventas, metricas, tally] = await Promise.all([
+  const [ventas, metricas, tally, tallyOrg] = await Promise.all([
     fetchSheet(sheetId, '01 - Data Ventas Form'),
     fetchSheet(sheetId, '02 - Métricas Anuncios'),
     fetchSheet(sheetId, '03 - Tally leads'),
+    fetchSheetOptional(sheetId, '04 - Tally leads org'),
   ])
-  return { ventas, metricas, tally }
+  return { ventas, metricas, tally: [...tally, ...tallyOrg] }
 }
