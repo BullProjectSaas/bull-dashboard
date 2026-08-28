@@ -78,24 +78,10 @@ const phoneSuffix = (v) => {
   return digits.length >= 5 ? digits.slice(-5) : null
 }
 
-// Attribution computed by the dashboard itself instead of trusting whatever formula lives
-// in the client's own Sheet: match the sale's phone number (last 5 digits) against Tally
-// leads, and use the matched lead's utm_content. When several leads share those digits,
-// prefer the most recent one BEFORE the sale date (last-touch attribution) — falling back
-// to the closest lead overall if none happened before the sale.
-function matchTallyByPhone(ventaRow, tally) {
-  const suffix = phoneSuffix(field(ventaRow, 'Celular Cliente'))
-  if (!suffix) return null
-
-  const saleKey = toDateKey(field(ventaRow, 'Fecha de venta'))
-  const candidates = tally
-    .map((r) => ({
-      row: r,
-      phone: phoneSuffix(field(r, 'Tu número de celular')),
-      key: toDateKey(field(r, 'Fecha')) || toDateKey(field(r, 'Submitted at')),
-    }))
-    .filter((c) => c.phone === suffix)
-
+// Among phone-matching candidates, prefer the most recent one BEFORE the sale date
+// (last-touch attribution) — falling back to the closest lead overall if none happened
+// before the sale.
+function pickBestCandidate(candidates, saleKey) {
   if (!candidates.length) return null
 
   const withDate = candidates.filter((c) => c.key)
@@ -106,6 +92,30 @@ function matchTallyByPhone(ventaRow, tally) {
 
   const sorted = [...withDate].sort((a, b) => (a.key < b.key ? -1 : 1))
   return sorted[0].row
+}
+
+// Attribution computed by the dashboard itself instead of trusting whatever formula lives
+// in the client's own Sheet: match the sale's phone number (last 5 digits) against Tally
+// leads, and use the matched lead's utm_content.
+function matchTallyByPhone(ventaRow, tally) {
+  const suffix = phoneSuffix(field(ventaRow, 'Celular Cliente'))
+  if (!suffix) return null
+
+  const saleKey = toDateKey(field(ventaRow, 'Fecha de venta'))
+  const candidates = tally
+    .map((r) => ({
+      row: r,
+      phone: phoneSuffix(field(r, 'Tu número de celular')),
+      key: toDateKey(field(r, 'Fecha')) || toDateKey(field(r, 'Submitted at')),
+      hasContent: Boolean(clean(field(r, 'utm_content'))),
+    }))
+    .filter((c) => c.phone === suffix)
+
+  // A same-phone submission with no utm_content (e.g. the organic leads form) shouldn't be
+  // able to bump a perfectly good, ad-attributed lead into "Sin atribución" just because it
+  // happened more recently — only fall back to a content-less match when nothing else exists.
+  const withContent = candidates.filter((c) => c.hasContent)
+  return pickBestCandidate(withContent, saleKey) || pickBestCandidate(candidates, saleKey)
 }
 
 export function getAttribution(row, tally) {
