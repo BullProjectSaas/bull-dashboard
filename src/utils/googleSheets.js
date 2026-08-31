@@ -40,9 +40,14 @@ const hasValue = (v) => v !== null && v !== undefined && String(v).trim() !== ''
 const REQUIRED_FIELDS = {
   '01 - Data Ventas Form': ['Fecha de venta', 'Monto de Venta'],
   '02 - Métricas Anuncios': ['Day', 'Ad Name'],
-  '03 - Tally leads': ['Submitted at'],
-  '04 - Tally leads org': ['Submitted at'],
 }
+
+// Tally-style sheets check "any of" these instead of requiring one specific field — a single
+// header going blank or getting renamed (this happened for real: "Submitted at" lost its
+// label when a client duplicated the sheet) shouldn't be able to silently wipe out every
+// lead and break phone-based attribution for the whole dashboard.
+const TALLY_ANY_OF_FIELDS = ['Tu número de celular', 'Submitted at', 'utm_content']
+const TALLY_SHEETS = new Set(['03 - Tally leads', '04 - Tally leads org'])
 
 export async function fetchSheet(sheetId, sheetName) {
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`
@@ -70,14 +75,14 @@ export async function fetchSheet(sheetId, sheetName) {
 
   const headers = json.table.cols.map((c) => c.label.trim())
   const requiredFields = REQUIRED_FIELDS[sheetName]
+  const isTallySheet = TALLY_SHEETS.has(sheetName)
   const rows = (json.table.rows || [])
     .filter((row) => row && row.c)
     .map((row) => Object.fromEntries(headers.map((h, i) => [h, parseGvizValue(row.c[i]?.v ?? null)])))
-    .filter((row) =>
-      requiredFields
-        ? requiredFields.every((f) => hasValue(pick(row, f)))
-        : Object.values(row).some(hasValue),
-    )
+    .filter((row) => {
+      if (isTallySheet) return TALLY_ANY_OF_FIELDS.some((f) => hasValue(pick(row, f)))
+      return requiredFields ? requiredFields.every((f) => hasValue(pick(row, f))) : Object.values(row).some(hasValue)
+    })
 
   return rows
 }
