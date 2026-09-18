@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { C } from './theme'
 import { useSheetData } from './hooks/useSheetData'
 import { useClientConfig } from './hooks/useClientConfig'
+import { useActivities } from './hooks/useActivities'
 import {
   computeDashboard,
   filterByDateRange,
@@ -28,6 +29,8 @@ import Spinner from './components/Spinner'
 import ErrorState from './components/ErrorState'
 import CampaignBoard from './components/board/CampaignBoard'
 import NutricionAdsPanel from './components/NutricionAdsPanel'
+import ActivitiesPanel from './components/ActivitiesPanel'
+import ActivitiesDateShortcut from './components/ActivitiesDateShortcut'
 
 function computeForRange(data, from, to, excludedAdNames) {
   const ventas = filterByDateRange(data.ventas, 'Fecha de venta', from, to)
@@ -43,6 +46,7 @@ export default function ClientDashboard() {
   const { data, loading, error, sheetId, refetch } = useSheetData()
   const { config, setExcludedAdNames } = useClientConfig(sheetId)
   const excludedAdNames = useMemo(() => config?.excludedAdNames || [], [config])
+  const { activities, ready: activitiesReady, error: activitiesError, addActivity, removeActivity } = useActivities(sheetId)
 
   const toggleNutricionAd = (adName, checked) => {
     const next = checked ? [...excludedAdNames, adName] : excludedAdNames.filter((n) => n !== adName)
@@ -86,6 +90,11 @@ export default function ClientDashboard() {
     if (!newRange.from && !newRange.to) setCompareEnabled(false)
   }
 
+  const handleSelectActivity = (newRange) => {
+    setRange(newRange)
+    setCompareEnabled(true)
+  }
+
   if (loading && !data) return <Spinner />
   if (error && !data) return <ErrorState message={error} onRetry={refetch} />
 
@@ -125,6 +134,7 @@ export default function ClientDashboard() {
         >
           Comparar vs. período anterior
         </button>
+        <ActivitiesDateShortcut activities={activities} onSelect={handleSelectActivity} />
       </div>
 
       {error && data && (
@@ -201,7 +211,7 @@ export default function ClientDashboard() {
             </button>
           }
         >
-          <DailyEvolutionChart data={dashboard.daily} cumulative={cumulative} />
+          <DailyEvolutionChart data={dashboard.daily} cumulative={cumulative} activities={activities} />
         </Section>
 
         <Section title="Detalle por anuncio">
@@ -231,6 +241,14 @@ export default function ClientDashboard() {
           adNames={fullDashboard.byAd.map((a) => a.ad).filter((name) => name !== 'Sin atribución')}
           excludedAdNames={excludedAdNames}
           onToggle={toggleNutricionAd}
+        />
+
+        <ActivitiesPanel
+          activities={activities}
+          ready={activitiesReady}
+          error={activitiesError}
+          addActivity={addActivity}
+          removeActivity={removeActivity}
         />
       </main>
     </div>

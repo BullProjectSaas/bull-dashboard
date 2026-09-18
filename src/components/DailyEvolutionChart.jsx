@@ -1,4 +1,4 @@
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { C } from '../theme'
 import { fmtARS, fmtDateShort } from '../utils/metrics'
 
@@ -10,7 +10,7 @@ const tooltipStyle = {
   fontSize: 13,
 }
 
-export default function DailyEvolutionChart({ data, cumulative }) {
+export default function DailyEvolutionChart({ data, cumulative, activities = [] }) {
   if (!data.length) {
     return <p style={{ color: C.muted, fontSize: 13 }}>Sin datos suficientes para este gráfico.</p>
   }
@@ -31,6 +31,15 @@ export default function DailyEvolutionChart({ data, cumulative }) {
           labelStyle={{ color: C.gold, fontWeight: 700 }}
         />
         <Legend wrapperStyle={{ fontSize: 12, color: C.muted }} />
+        {activities.map((a) => (
+          <ReferenceLine
+            key={a.id}
+            x={a.date}
+            stroke={C.amber}
+            strokeDasharray="4 3"
+            label={{ value: a.category, position: 'top', fill: C.amber, fontSize: 10 }}
+          />
+        ))}
         <Line
           type="monotone"
           dataKey={inversionKey}

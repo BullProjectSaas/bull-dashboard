@@ -2,8 +2,8 @@ rules_version = '2';
 
 // Bull Dashboard — Firestore security rules.
 //
-// `boards` and `clients` are readable/writable by anyone with the app's shared password
-// (enforced only in the UI, not here — matches how it's always worked).
+// `boards`, `clients` and `activities` are readable/writable by anyone with the app's shared
+// password (enforced only in the UI, not here — matches how it's always worked).
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -12,6 +12,10 @@ service cloud.firestore {
     }
 
     match /clients/{sheetId} {
+      allow read, write: if true;
+    }
+
+    match /activities/{activityId} {
       allow read, write: if true;
     }
   }
